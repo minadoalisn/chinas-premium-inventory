@@ -92,4 +92,9 @@ export const orderApi = {
   getById: (id: string) => api.get(`/orders/${id}`),
 }
 
+export const smsApi = {
+  sendCode: (phone: string) =>
+    api.post('/sms/send-code', { phone }),
+}
+
 export default api

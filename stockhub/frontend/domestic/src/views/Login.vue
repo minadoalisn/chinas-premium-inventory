@@ -1,30 +1,104 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { authApi } from '@/api'
-import type { authApi } from '@/api'
 
 const router = useRouter()
 
 const loginForm = ref({
-  email: '',
-  password: '',
+  phone: '',
+  code: '',
 })
 
-const loading = ref(false)
+const loginFormRef = ref()
 
-const handleLogin = async () => {
-  loading.value = true
+const rules = {
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' },
+  ],
+  code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { pattern: /^\d{6}$/, message: '验证码必须是6位数字', trigger: 'blur' },
+  ],
+}
+
+const loading = ref(false)
+const sendingCode = ref(false)
+const countdown = ref(0)
+const countdownTimer = ref<NodeJS.Timeout | null>(null)
+
+// 发送验证码
+const sendCode = async () => {
+  if (!loginForm.value.phone) {
+    ElMessage.warning('请先输入手机号')
+    return
+  }
+
+  if (!/^1[3-9]\d{9}$/.test(loginForm.value.phone)) {
+    ElMessage.warning('请输入正确的手机号')
+    return
+  }
+
+  sendingCode.value = true
   try {
-    const res = await authApi.login({
-      email: loginForm.value.email,
-      password: loginForm.value.password,
-    })
+    const res = await fetch('/api/sms/send-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'domestic',
+      },
+      body: JSON.stringify({
+        phone: loginForm.value.phone,
+      }),
+    }).then(res => res.json())
 
     if (res.success) {
-      localStorage.setItem('token', res.data.accessToken)
-      localStorage.setItem('user', JSON.stringify(res.data.user))
+      ElMessage.success('验证码已发送')
+      startCountdown()
+    } else {
+      ElMessage.error(res.message || '验证码发送失败')
+    }
+  } catch (error) {
+    console.error('Failed to send code:', error)
+    ElMessage.error('验证码发送失败，请稍后重试')
+  } finally {
+    sendingCode.value = false
+  }
+}
+
+// 开始倒计时
+const startCountdown = () => {
+  countdown.value = 60
+  countdownTimer.value = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(countdownTimer.value!)
+      countdownTimer.value = null
+    }
+  }, 1000)
+}
+
+// 登录
+const handleLogin = async () => {
+  if (!loginFormRef.value) return
+
+  try {
+    await loginFormRef.value.validate()
+
+    loading.value = true
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'domestic',
+      },
+      body: JSON.stringify(loginForm.value),
+    }).then(res => res.json())
+
+    if (res.success || res.accessToken) {
+      localStorage.setItem('token', res.accessToken)
+      localStorage.setItem('user', JSON.stringify(res.user))
       ElMessage.success('登录成功')
       router.push('/')
     } else {
@@ -32,7 +106,7 @@ const handleLogin = async () => {
     }
   } catch (error: any) {
     console.error('Login error:', error)
-    ElMessage.error(error.response?.data?.message || '登录失败，请检查账号密码')
+    ElMessage.error(error.response?.data?.message || '登录失败，请检查验证码')
   } finally {
     loading.value = false
   }
@@ -53,26 +127,32 @@ const goToRegister = () => {
 
       <el-card class="login-form-card">
         <el-form
+          ref="loginFormRef"
           :model="loginForm"
+          :rules="rules"
           label-width="80px"
           @submit.prevent="handleLogin"
         >
-          <el-form-item label="邮箱">
-            <el-input
-              v-model="loginForm.email"
-              placeholder="请输入邮箱"
-              size="large"
-            />
+          <el-form-item label="手机号" prop="phone">
+            <el-input v-model="loginForm.phone" placeholder="请输入手机号" maxlength="11" />
           </el-form-item>
-          <el-form-item label="密码">
-            <el-input
-              v-model="loginForm.password"
-              type="password"
-              placeholder="请输入密码"
-              size="large"
-              show-password
-              @keyup.enter="handleLogin"
-            />
+          <el-form-item label="验证码" prop="code">
+            <div class="code-input-group">
+              <el-input
+                v-model="loginForm.code"
+                placeholder="请输入验证码"
+                maxlength="6"
+                class="code-input"
+              />
+              <el-button
+                :disabled="countdown > 0 || sendingCode"
+                :loading="sendingCode"
+                @click="sendCode"
+                class="code-button"
+              >
+                {{ countdown > 0 ? `${countdown}秒` : '获取验证码' }}
+              </el-button>
+            </div>
           </el-form-item>
 
           <el-form-item>
@@ -133,6 +213,19 @@ const goToRegister = () => {
 
 .login-form-card {
   padding: 32px;
+}
+
+.code-input-group {
+  display: flex;
+  gap: 12px;
+}
+
+.code-input {
+  flex: 1;
+}
+
+.code-button {
+  min-width: 120px;
 }
 
 .login-footer {
