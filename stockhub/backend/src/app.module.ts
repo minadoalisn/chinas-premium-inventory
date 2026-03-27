@@ -12,6 +12,10 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { InquiriesModule } from './modules/inquiries/inquiries.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { SmsModule } from './modules/sms/sms.module';
+import { UploadModule } from './modules/oss/upload.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { StatsModule } from './modules/stats/stats.module';
+import { RedisModule } from './modules/redis/redis.module';
 import { DataSeederService } from './common/data-seeder.service';
 
 @Module({
@@ -41,6 +45,10 @@ import { DataSeederService } from './common/data-seeder.service';
     InquiriesModule,
     OrdersModule,
     SmsModule,
+    UploadModule,
+    NotificationsModule,
+    StatsModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService, DataSeederService],

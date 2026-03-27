@@ -53,6 +53,7 @@ const activeMenu = computed(() => {
           <el-menu-item index="3" route="/products">库存发布</el-menu-item>
           <el-menu-item index="2" route="/my-demands">我的需求</el-menu-item>
           <el-menu-item index="4" route="/merchant-center">商户中心</el-menu-item>
+          <el-menu-item index="5" route="/stats">数据统计</el-menu-item>
         </el-menu>
       </div>
       <div class="header-right" v-if="authStore.isAuthenticated">

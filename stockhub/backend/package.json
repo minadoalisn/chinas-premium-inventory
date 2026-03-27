@@ -9,7 +9,9 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-    "test": "jest"
+    "test": "jest",
+    "test:cov": "jest --coverage",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -18,8 +20,10 @@
     "@nestjs/jwt": "^10.0.0",
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/websockets": "^10.0.0",
     "@nestjs/swagger": "^7.0.0",
     "@nestjs/typeorm": "^10.0.0",
+    "@nestjs/platform-socket": "^10.0.0",
     "axios": "^1.6.0",
     "bcrypt": "^5.1.0",
     "class-transformer": "^0.5.1",
@@ -32,7 +36,9 @@
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.17",
     "uuid": "^9.0.0",
-    "yaml": "^2.3.0"
+    "yaml": "^2.3.0",
+    "socket.io": "^4.0.0",
+    "ioredis": "^5.3.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -44,6 +50,8 @@
     "@types/node": "^20.3.1",
     "@types/passport-jwt": "^3.0.9",
     "@types/uuid": "^9.0.2",
+    "@types/socket.io": "^4.0.0",
+    "@types/ioredis": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.42.0",
