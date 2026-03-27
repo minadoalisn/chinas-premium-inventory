@@ -1,403 +1,732 @@
+<template>
+  <div class="home-page">
+    <!-- 顶部导航 -->
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <div class="logo">
+            <h1 class="logo-text">📦 StockHub</h1>
+          </div>
+          <nav class="nav">
+            <router-link to="/" class="nav-link active">求购大厅</router-link>
+            <router-link to="/products" class="nav-link">库存商品</router-link>
+            <router-link to="/merchant-center" class="nav-link">商户中心</router-link>
+          </nav>
+          <div class="header-actions">
+            <button v-if="!isAuthenticated" @click="showLoginDialog" class="btn btn-ghost">
+              <i class="icon">👤</i>
+              登录
+            </button>
+            <div v-else class="user-menu">
+              <span class="user-name">{{ user?.name }}</span>
+              <button @click="logout" class="btn btn-ghost btn-sm">退出</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+      <div class="container">
+        <!-- 搜索栏 -->
+        <div class="search-section">
+          <div class="search-box">
+            <input
+              v-model="searchQuery"
+              type="text"
+              class="search-input"
+              placeholder="搜索求购需求..."
+              @input="handleSearch"
+            >
+            <button @click="handleSearch" class="btn btn-primary">
+              <i class="icon">🔍</i>
+              搜索
+            </button>
+          </div>
+          
+          <!-- 筛选标签 -->
+          <div class="filter-tags">
+            <button
+              v-for="category in categories"
+              :key="category.id"
+              @click="filterByCategory(category.id)"
+              :class="['tag', { active: selectedCategory === category.id }]"
+            >
+              <span class="tag-icon">{{ category.icon }}</span>
+              {{ category.name }}
+            </button>
+            <button
+              @click="resetFilters"
+              :class="['tag', { active: selectedCategory === null }]"
+            >
+              全部
+            </button>
+          </div>
+        </div>
+
+        <!-- 求购列表 -->
+        <div class="demands-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              求购需求
+              <span class="badge badge-primary">{{ totalDemands }}</span>
+            </h2>
+            <div class="section-actions">
+              <select v-model="sortBy" @change="loadDemands" class="select">
+                <option value="latest">最新发布</option>
+                <option value="price_asc">价格从低到高</option>
+                <option value="price_desc">价格从高到低</option>
+                <option value="quantity_desc">数量从多到少</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 加载状态 -->
+          <div v-if="loading" class="loading-container">
+            <div class="skeleton-loader">
+              <div v-for="i in 6" :key="i" class="skeleton-card">
+                <div class="skeleton skeleton-image"></div>
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text short"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 求购卡片列表 -->
+          <div v-else-if="demands.length > 0" class="demands-grid">
+            <div
+              v-for="demand in demands"
+              :key="demand.id"
+              @click="viewDemand(demand.id)"
+              class="demand-card card"
+            >
+              <div class="card-body">
+                <div class="demand-header">
+                  <span class="badge" :class="getDemandStatusBadge(demand.status)">
+                    {{ getDemandStatusText(demand.status) }}
+                  </span>
+                  <span class="demand-time">{{ formatTime(demand.createdAt) }}</span>
+                </div>
+                
+                <h3 class="demand-title">{{ demand.title }}</h3>
+                <p class="demand-description line-clamp-2">{{ demand.description }}</p>
+                
+                <div class="demand-meta">
+                  <div class="meta-item">
+                    <i class="icon">📊</i>
+                    <span>数量: {{ demand.quantity }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <i class="icon">💰</i>
+                    <span>预算: ¥{{ formatPrice(demand.price) }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <i class="icon">🏷️</i>
+                    <span>{{ getCategoryName(demand.categoryId) }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="card-footer">
+                <div class="demand-user">
+                  <div class="user-avatar">{{ demand.userName?.charAt(0) || '?' }}</div>
+                  <span class="user-name">{{ demand.userName || '匿名用户' }}</span>
+                </div>
+                <button @click.stop="createInquiry(demand)" class="btn btn-primary btn-sm">
+                  <i class="icon">💬</i>
+                  询盘
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 空状态 -->
+          <div v-else class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h3>暂无求购需求</h3>
+            <p>还没有人发布求购需求，快来发布第一个吧！</p>
+            <button @click="createDemand" class="btn btn-primary">
+              <i class="icon">➕</i>
+              发布求购
+            </button>
+          </div>
+
+          <!-- 分页 -->
+          <div v-if="totalDemands > 0" class="pagination">
+            <button
+              @click="changePage(currentPage - 1)"
+              :disabled="currentPage === 1"
+              class="btn btn-ghost"
+            >
+              上一页
+            </button>
+            <span class="page-info">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
+            <button
+              @click="changePage(currentPage + 1)"
+              :disabled="currentPage >= totalPages"
+              class="btn btn-ghost"
+            >
+              下一页
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 创建求购弹窗 -->
+    <CreateDemandDialog
+      v-if="showDialog"
+      @close="showDialog = false"
+      @success="handleCreateSuccess"
+    />
+
+    <!-- 登录弹窗 -->
+    <LoginDialog
+      v-if="showLogin"
+      @close="showLogin = false"
+      @success="handleLoginSuccess"
+    />
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useDemandStore } from '@/stores/demand'
-import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
+import CreateDemandDialog from '@/components/CreateDemandDialog.vue'
+import LoginDialog from '@/components/LoginDialog.vue'
+import api from '@/api'
 
-const demandStore = useDemandStore()
-const authStore = useAuthStore()
 const router = useRouter()
+const authStore = useAuthStore()
 
+// 状态
+const demands = ref<any[]>([])
+const categories = ref<any[]>([])
 const loading = ref(false)
-const searchForm = ref({
-  keyword: '',
-  category: '',
-  sort: 'newest', // newest, quantity, price
-})
+const searchQuery = ref('')
+const selectedCategory = ref<number | null>(null)
+const sortBy = ref('latest')
+const currentPage = ref(1)
+const pageSize = ref(12)
+const totalDemands = ref(0)
+const showDialog = ref(false)
+const showLogin = ref(false)
 
-const statistics = ref({
-  todayDemands: 12580,
-  todayVolume: 230000000,
-  onlineMerchants: 8650,
-  stockProducts: 1560000,
-})
+// 计算属性
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const user = computed(() => authStore.user)
+const totalPages = computed(() => Math.ceil(totalDemands.value / pageSize.value))
 
-const categories = ref([
-  { id: '1', name: '小家电', count: 1280, color: 'red' },
-  { id: '2', name: '电子产品', count: 856, color: 'blue' },
-  { id: '3', name: '快消品', count: 1450, color: 'green' },
-  { id: '4', name: '旅游用品', count: 680, color: 'yellow' },
-  { id: '5', name: '日用品', count: 920, color: 'yellow' },
-  { id: '6', name: '美妆', count: 680, color: 'purple' },
-  { id: '7', name: '家居用品', count: 750, color: 'pink' },
-  { id: '8', name: 'LED灯', count: 540, color: 'orange' },
-  { id: '9', name: '家具', count: 420, color: 'indigo' },
-  { id: '10', name: '设备', count: 380, color: 'purple' },
-  { id: '11', name: '原材料', count: 560, color: 'teal' },
-  { id: '12', name: '五金建材', count: 650, color: 'gray' },
-])
-
-// 获取求购列表
-const fetchDemands = async () => {
+// 方法
+const loadDemands = async () => {
   loading.value = true
   try {
     const params: any = {
-      page: 1,
-      limit: 20,
+      page: currentPage.value,
+      limit: pageSize.value,
+      sort: sortBy.value,
     }
-
-    if (searchForm.value.keyword) {
-      params.search = searchForm.value.keyword
+    
+    if (searchQuery.value) {
+      params.search = searchQuery.value
     }
-
-    if (searchForm.value.category) {
-      params.category = searchForm.value.category
+    
+    if (selectedCategory.value) {
+      params.categoryId = selectedCategory.value
     }
-
-    if (searchForm.value.sort) {
-      params.sort = searchForm.value.sort
-    }
-
-    const res = await fetch(`/api/demands?${new URLSearchParams(params)}`)
-    if (res.success) {
-      demandStore.demandList = res.data.data
-    }
+    
+    const response = await api.demands.findAll(params)
+    demands.value = response.data
+    totalDemands.value = response.total
   } catch (error) {
-    console.error('Failed to fetch demands:', error)
-    ElMessage.error('获取求购列表失败')
+    console.error('加载求购列表失败:', error)
   } finally {
     loading.value = false
   }
 }
 
-// 搜索
+const loadCategories = async () => {
+  try {
+    const response = await api.categories.findAll()
+    categories.value = response.data
+  } catch (error) {
+    console.error('加载类目失败:', error)
+  }
+}
+
 const handleSearch = () => {
-  fetchDemands()
+  currentPage.value = 1
+  loadDemands()
 }
 
-// 按类目筛选
-const filterByCategory = (categoryId: string) => {
-  searchForm.value.category = categoryId
-  fetchDemands()
+const filterByCategory = (categoryId: number) => {
+  selectedCategory.value = categoryId
+  currentPage.value = 1
+  loadDemands()
 }
 
-// 排序切换
-const handleSort = (sort: string) => {
-  searchForm.value.sort = sort
-  fetchDemands()
+const resetFilters = () => {
+  selectedCategory.value = null
+  searchQuery.value = ''
+  currentPage.value = 1
+  loadDemands()
 }
 
-// 打开创建求购弹窗
-const openCreateDialog = () => {
-  if (!authStore.isAuthenticated) {
-    ElMessage.warning('请先登录')
-    router.push('/login')
+const changePage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    loadDemands()
+  }
+}
+
+const viewDemand = (id: string) => {
+  router.push(`/demands/${id}`)
+}
+
+const createInquiry = (demand: any) => {
+  if (!isAuthenticated.value) {
+    showLogin.value = true
     return
   }
-  demandStore.isCreateDialogVisible = true
+  // TODO: 实现询盘创建
+  console.log('创建询盘:', demand.id)
 }
 
-// 点击"我有库存"
-const handleHaveStock = (demand: any) => {
-  if (!authStore.isAuthenticated) {
-    ElMessage.warning('请先登录')
-    router.push('/login')
+const createDemand = () => {
+  if (!isAuthenticated.value) {
+    showLogin.value = true
     return
   }
-  ElMessage.success('已联系商户，等待对方确认')
+  showDialog.value = true
 }
 
-// 收藏需求
-const handleCollectDemand = (demand: any) => {
-  if (!authStore.isAuthenticated) {
-    ElMessage.warning('请先登录')
-    router.push('/login')
-    return
-  }
-  ElMessage.success('已收藏')
+const showLoginDialog = () => {
+  showLogin.value = true
 }
 
-// 格式化数字
-const formatNumber = (num: number) => {
-  if (num >= 100000000) {
-    return `¥${(num / 100000000).toFixed(1)}亿`
-  }
-  if (num >= 10000) {
-    return `${(num / 10000).toFixed(1)}万`
-  }
-  return num.toString()
+const handleCreateSuccess = () => {
+  showDialog.value = false
+  currentPage.value = 1
+  loadDemands()
 }
 
-// 格式化时间
+const handleLoginSuccess = () => {
+  showLogin.value = false
+}
+
+const logout = () => {
+  authStore.logout()
+  router.push('/')
+}
+
+// 工具方法
 const formatTime = (time: string) => {
-  const diff = Date.now() - new Date(time).getTime()
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-
-  if (minutes < 1) return '刚刚'
-  if (minutes < 60) return `${minutes}分钟前`
-  if (hours < 24) return `${hours}小时前`
-  return `${Math.floor(hours / 24)}天前`
+  const date = new Date(time)
+  const now = new Date()
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
+  
+  if (diff < 60) return '刚刚'
+  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
+  if (diff < 2592000) return `${Math.floor(diff / 86400)}天前`
+  return date.toLocaleDateString()
 }
 
-// 获取状态标签
-const getStatusBadge = (demand: any) => {
-  if (demand.isUrgent) {
-    return { text: '加急', color: 'red' }
+const formatPrice = (price: number) => {
+  if (price >= 10000) {
+    return `${(price / 10000).toFixed(1)}万`
   }
-  if (demand.type === 'near-expiry') {
-    return { text: '临期清仓', color: 'yellow' }
-  }
-  if (demand.type === 'equipment') {
-    return { text: '设备采购', color: 'purple' }
-  }
-  return { text: '优质采购', color: 'green' }
+  return price.toLocaleString()
 }
 
-// 获取类目标签颜色
-const getCategoryColor = (color: string) => {
-  const colors: Record<string, string> = {
-    red: 'bg-red-100 text-red-600',
-    blue: 'bg-blue-100 text-blue-600',
-    green: 'bg-green-100 text-green-600',
-    yellow: 'bg-yellow-100 text-yellow-600',
-    purple: 'bg-purple-100 text-purple-600',
-    pink: 'bg-pink-100 text-pink-600',
-    orange: 'bg-orange-100 text-orange-600',
-    teal: 'bg-teal-100 text-teal-600',
-    gray: 'bg-gray-100 text-gray-600',
-  }
-  return colors[color] || 'bg-blue-100 text-blue-600'
+const getCategoryName = (categoryId: string) => {
+  const category = categories.value.find(c => c.id === categoryId)
+  return category?.name || '未分类'
 }
 
+const getDemandStatusBadge = (status: string) => {
+  const statusMap: Record<string, string> = {
+    pending: 'badge-warning',
+    matched: 'badge-success',
+    completed: 'badge-primary',
+    cancelled: 'badge-error',
+  }
+  return statusMap[status] || 'badge-tertiary'
+}
+
+const getDemandStatusText = (status: string) => {
+  const statusMap: Record<string, string> = {
+    pending: '待匹配',
+    matched: '已匹配',
+    completed: '已完成',
+    cancelled: '已取消',
+  }
+  return statusMap[status] || '未知'
+}
+
+// 生命周期
 onMounted(() => {
-  fetchDemands()
+  loadDemands()
+  loadCategories()
 })
 </script>
 
-<template>
-  <div class="home-page">
-    <!-- 统计数据栏 -->
-    <div class="gradient-header text-white py-4">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-4 gap-4 text-center">
-          <div>
-            <div class="text-2xl font-bold">{{ statistics.todayDemands.toLocaleString() }}</div>
-            <div class="text-sm opacity-80">今日求购</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold">{{ formatNumber(statistics.todayVolume) }}</div>
-            <div class="text-sm opacity-80">今日成交额</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold">{{ statistics.onlineMerchants.toLocaleString() }}</div>
-            <div class="text-sm opacity-80">在线商户</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold">{{ formatNumber(statistics.stockProducts) }}</div>
-            <div class="text-sm opacity-80">库存商品</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 搜索筛选区 -->
-    <div class="bg-white shadow-sm py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex space-x-4">
-          <div class="flex-1 relative">
-            <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input
-              v-model="searchForm.keyword"
-              type="text"
-              placeholder="搜索求购商品、类目、规格..."
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              @keyup.enter="handleSearch"
-            />
-          </div>
-          <select
-            v-model="searchForm.category"
-            class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-            @change="handleSearch"
-          >
-            <option value="">全部类目</option>
-            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-              {{ cat.name }}
-            </option>
-          </select>
-          <button
-            class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition"
-            @click="handleSearch"
-          >
-            搜索求购
-          </button>
-        </div>
-
-        <!-- 热门类目 -->
-        <div class="mt-6">
-          <h3 class="text-sm font-medium text-gray-600 mb-3">热门类目：</h3>
-          <div class="flex flex-wrap gap-2">
-            <span
-              v-for="cat in categories"
-              :key="cat.id"
-              class="category-badge px-3 py-1 rounded-full text-sm cursor-pointer transition-all"
-              :class="getCategoryColor(cat.color)"
-              @click="filterByCategory(cat.id)"
-            >
-              <i class="ri-fire-line mr-1" v-if="cat.color === 'red'"></i>
-              {{ cat.name }} ({{ cat.count }})
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 求购列表 -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-bold text-gray-900">最新求购需求</h2>
-        <div class="flex space-x-4 text-sm">
-          <button
-            :class="searchForm.sort === 'newest' ? 'text-purple-600 font-medium' : 'text-gray-600 hover:text-purple-600'"
-            @click="handleSort('newest')"
-          >
-            最新发布
-          </button>
-          <button
-            :class="searchForm.sort === 'quantity' ? 'text-purple-600 font-medium' : 'text-gray-600 hover:text-purple-600'"
-            @click="handleSort('quantity')"
-          >
-            数量最多
-          </button>
-          <button
-            :class="searchForm.sort === 'price' ? 'text-purple-600 font-medium' : 'text-gray-600 hover:text-purple-600'"
-            @click="handleSort('price')"
-          >
-            价格最高
-          </button>
-        </div>
-      </div>
-
-      <div v-loading="loading" class="grid gap-4">
-        <div
-          v-for="demand in demandStore.demandList"
-          :key="demand.id"
-          class="bg-white rounded-xl shadow-sm p-6 card-hover transition duration-300"
-        >
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <div class="flex items-center space-x-3 mb-3">
-                <span
-                  class="px-2 py-1 rounded text-xs font-medium"
-                  :class="getCategoryColor(getStatusBadge(demand).color)"
-                >
-                  {{ getStatusBadge(demand).text }}
-                </span>
-                <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs">
-                  {{ demand.category?.name }}
-                </span>
-                <span class="text-gray-400 text-xs">{{ formatTime(demand.createdAt) }}前发布</span>
-                <span class="pulse-dot w-2 h-2 bg-green-500 rounded-full"></span>
-                <span class="text-green-600 text-xs">在线采购</span>
-              </div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                {{ demand.title }}
-              </h3>
-              <p class="text-gray-600 text-sm mb-3">
-                {{ demand.description }}
-              </p>
-              <div class="flex items-center space-x-6 text-sm">
-                <div class="flex items-center">
-                  <i class="ri-shopping-basket-line text-purple-600 mr-1"></i>
-                  <span class="text-gray-600">求购数量：</span>
-                  <span class="font-semibold text-gray-900 ml-1">{{ demand.quantity }} {{ demand.unit }}</span>
-                </div>
-                <div class="flex items-center">
-                  <i class="ri-money-cny-circle-line text-green-600 mr-1"></i>
-                  <span class="text-gray-600">预算单价：</span>
-                  <span class="font-semibold text-green-600 ml-1">{{ demand.budget }}</span>
-                </div>
-                <div class="flex items-center">
-                  <i class="ri-map-pin-line text-blue-600 mr-1"></i>
-                  <span class="text-gray-600">收货地：</span>
-                  <span class="text-gray-900 ml-1">{{ demand.deliveryAddress }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="flex flex-col items-end space-y-3">
-              <button
-                class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition"
-                @click="handleHaveStock(demand)"
-              >
-                <i class="ri-hand-heart-line mr-1"></i>我有库存
-              </button>
-              <button
-                class="border border-purple-600 text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-50 transition"
-                @click="handleCollectDemand(demand)"
-              >
-                <i class="ri-star-line mr-1"></i>收藏需求
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 空状态 -->
-        <el-empty
-          v-if="!loading && demandStore.demandList.length === 0"
-          description="暂无求购需求"
-        />
-      </div>
-
-      <!-- 加载更多 -->
-      <div class="text-center mt-8" v-if="demandStore.demandList.length > 0">
-        <button
-          class="bg-white border border-purple-600 text-purple-600 px-8 py-3 rounded-lg hover:bg-purple-50 transition"
-          @click="fetchDemands"
-        >
-          <i class="ri-refresh-line mr-2"></i>加载更多求购
-        </button>
-      </div>
-    </div>
-
-    <!-- 创建求购弹窗 -->
-    <CreateDemandDialog v-if="demandStore.isCreateDialogVisible" />
-  </div>
-</template>
-
 <style scoped>
 .home-page {
-  min-height: calc(100vh - 60px);
-  background: #f9fafb;
+  min-height: 100vh;
+  background: var(--bg-secondary);
 }
 
-.gradient-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* 顶部导航 */
+.header {
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  transition: all var(--transition-base);
 }
 
-.card-hover:hover {
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.logo-text {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.nav-link.active {
+  color: var(--primary-color);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.user-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* 主要内容 */
+.main-content {
+  padding: var(--space-8) 0;
+  animation: fadeIn var(--transition-slow);
+}
+
+/* 搜索栏 */
+.search-section {
+  background: var(--bg-primary);
+  padding: var(--space-8);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--space-8);
+}
+
+.search-box {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.search-input {
+  flex: 1;
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-lg);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.tag:hover {
+  background: var(--border-default);
+  color: var(--text-primary);
+}
+
+.tag.active {
+  background: var(--primary-color);
+  color: var(--text-inverse);
+  border-color: var(--primary-color);
+}
+
+.tag-icon {
+  font-size: var(--text-base);
+}
+
+/* 求购列表 */
+.demands-section {
+  animation: fadeIn var(--transition-slow);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.section-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.select {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+/* 加载状态 */
+.loading-container {
+  min-height: 400px;
+}
+
+.skeleton-loader {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-6);
+}
+
+.skeleton-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.skeleton-image {
+  height: 120px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.skeleton-title {
+  height: 24px;
+  margin-bottom: var(--space-3);
+}
+
+.skeleton-text {
+  height: 16px;
+  margin-bottom: var(--space-2);
+  width: 100%;
+}
+
+.skeleton-text.short {
+  width: 60%;
+}
+
+/* 求购卡片 */
+.demands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.demand-card {
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.demand-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-xl);
 }
 
-.category-badge {
-  transition: all 0.3s ease;
+.demand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
 }
 
-.category-badge:hover {
-  transform: scale(1.05);
+.demand-time {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
 }
 
-.pulse-dot {
-  animation: pulse 2s infinite;
+.demand-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+  line-height: 1.4;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+.demand-description {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+  min-height: 48px;
+}
+
+.demand-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.meta-item .icon {
+  font-size: var(--text-base);
+}
+
+.demand-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--primary-gradient);
+  color: var(--text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: var(--space-16) var(--space-8);
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: var(--space-6);
+}
+
+.empty-state h3 {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  margin-bottom: var(--space-6);
+}
+
+/* 分页 */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-8) 0;
+}
+
+.page-info {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .nav {
+    display: none;
   }
-  50% {
-    opacity: 0.5;
+  
+  .search-box {
+    flex-direction: column;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+  
+  .demands-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
