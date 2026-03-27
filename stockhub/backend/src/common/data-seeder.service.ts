@@ -1,22 +1,30 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
 
 @Injectable()
-export class CategoriesService {
+export class DataSeederService implements OnModuleInit {
+  private readonly logger = new Logger(DataSeederService.name);
+
   constructor(
     @InjectRepository(Category)
     private categoriesRepository: Repository<Category>,
   ) {}
 
+  async onModuleInit() {
+    this.logger.log('开始初始化数据...');
+    await this.initializeCategories();
+    this.logger.log('数据初始化完成');
+  }
+
   /**
-   * 初始化12个类目数据
+   * 初始化类目数据
    */
-  async initializeCategories(): Promise<void> {
+  private async initializeCategories() {
     const count = await this.categoriesRepository.count();
     if (count > 0) {
-      console.log('类目数据已存在，跳过初始化');
+      this.logger.log(`类目数据已存在（${count}条），跳过初始化`);
       return;
     }
 
@@ -40,33 +48,6 @@ export class CategoriesService {
       await this.categoriesRepository.save(category);
     }
 
-    console.log(`已初始化 ${categories.length} 个类目`);
-  }
-
-  /**
-   * 获取所有类目
-   */
-  async findAll() {
-    return this.categoriesRepository.find({
-      order: { id: 'ASC' },
-    });
-  }
-
-  /**
-   * 获取单个类目
-   */
-  async findOne(id: string) {
-    return this.categoriesRepository.findOne({
-      where: { id },
-    });
-  }
-
-  /**
-   * 根据ID列表获取类目
-   */
-  async findByIds(ids: string[]) {
-    return this.categoriesRepository.find({
-      where: ids.map(id => ({ id })),
-    });
+    this.logger.log(`已初始化 ${categories.length} 个类目`);
   }
 }

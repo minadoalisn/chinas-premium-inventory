@@ -12,6 +12,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { InquiriesModule } from './modules/inquiries/inquiries.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { SmsModule } from './modules/sms/sms.module';
+import { DataSeederService } from './common/data-seeder.service';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { SmsModule } from './modules/sms/sms.module';
     SmsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, DataSeederService],
+  exports: [],
 })
 export class AppModule {}

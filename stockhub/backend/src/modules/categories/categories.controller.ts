@@ -1,49 +1,35 @@
-import { Controller, Get, Post, Param, Query, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@ApiTags('categories')
+@ApiTags('类目管理')
 @Controller('categories')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
-  /**
-   * 获取所有类目
-   */
+  @Post('initialize')
+  @ApiOperation({ summary: '初始化类目数据' })
+  @ApiResponse({ status: 201, description: '初始化成功' })
+  async initialize() {
+    await this.categoriesService.initializeCategories();
+    return { message: '类目数据初始化成功' };
+  }
+
   @Get()
   @ApiOperation({ summary: '获取所有类目' })
-  async findAll(@Req() req: any) {
-    const clientType = req.clientType || 'domestic';
-    return this.categoriesService.findAll(clientType);
+  @ApiResponse({ status: 200, description: '获取成功' })
+  findAll() {
+    return this.categoriesService.findAll();
   }
 
-  /**
-   * 获取类目详情
-   */
   @Get(':id')
   @ApiOperation({ summary: '获取类目详情' })
-  async findOne(@Req() req: any, @Param('id') id: string) {
-    const clientType = req.clientType || 'domestic';
-    return this.categoriesService.findOne(parseInt(id), clientType);
-  }
-
-  /**
-   * 根据父类目获取子类目
-   */
-  @Get('parent/:parentId')
-  @ApiOperation({ summary: '获取子类目' })
-  @ApiQuery({ name: 'parentId', required: false, description: '父类目ID，默认0' })
-  async findByParent(@Req() req: any, @Param('parentId') parentId: string = '0') {
-    const clientType = req.clientType || 'domestic';
-    return this.categoriesService.findByParent(parseInt(parentId), clientType);
-  }
-
-  /**
-   * 初始化类目数据（仅开发环境）
-   */
-  @Post('seed')
-  @ApiOperation({ summary: '初始化类目数据' })
-  async seed() {
-    return this.categoriesService.seedCategories();
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 404, description: '类目不存在' })
+  findOne(@Param('id') id: string) {
+    return this.categoriesService.findOne(id);
   }
 }
