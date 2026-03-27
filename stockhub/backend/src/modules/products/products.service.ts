@@ -1,238 +1,240 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, MoreThanOrEqual, LessThanOrEqual, In } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { Product } from './entities/product.entity';
-import { CreateProductDto } from './dto/create-product.dto';
+import { Category } from '../categories/entities/category.entity';
 
 @Injectable()
 export class ProductsService {
-  private readonly logger = new Logger(ProductsService.name);
-
   constructor(
     @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
+    private productsRepository: Repository<Product>,
+    @InjectRepository(Category)
+    private categoriesRepository: Repository<Category>,
   ) {}
 
+  /**
+   * 创建商品
+   */
+  async create(
+    userId: string,
+    merchantId: string,
+    createData: Partial<Product>
+  ): Promise<Product> {
+    // 验证类目
+    if (createData.category) {
+      const category = await this.categoriesRepository.findOne({
+        where: { id: createData.category.id },
+      });
+      if (!category) {
+        throw new NotFoundException('类目不存在');
+      }
+    }
+
+    const product = this.productsRepository.create({
+      ...createData,
+      userId,
+      merchantId,
+      status: 'pending',
+    });
+
+    return this.productsRepository.save(product);
+  }
+
+  /**
+   * 获取商品列表
+   */
   async findAll(params: {
-    clientType: 'domestic' | 'overseas';
-    category?: string;
     page?: number;
     limit?: number;
     search?: string;
-    sort?: string;
+    category?: string;
     minPrice?: number;
     maxPrice?: number;
-    status?: string;
+    sort?: 'newest' | 'price_asc' | 'price_desc';
+    merchantId?: string;
   }) {
     const {
-      clientType,
-      category,
       page = 1,
       limit = 20,
       search,
-      sort = 'newest',
+      category,
       minPrice,
       maxPrice,
-      status = 'approved',
+      sort = 'newest',
+      merchantId,
     } = params;
 
-    // 构建查询条件
-    const where: any = {
-      status,
-      stockQty: MoreThanOrEqual(0),
-    };
+    const queryBuilder = this.productsRepository.createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.merchant', 'merchant');
 
-    // 根据客户端类型控制可见性
-    if (clientType === 'domestic') {
-      where.displayDomestic = true;
-    } else {
-      where.displayOverseas = true;
+    // 搜索条件
+    if (search) {
+      queryBuilder.andWhere(
+        '(product.title LIKE :search OR product.description LIKE :search)',
+        { search: `%${search}%` }
+      );
     }
 
     // 类目筛选
     if (category) {
-      where.categoryId = parseInt(category);
+      queryBuilder.andWhere('category.id = :category', { category });
     }
 
-    // 搜索筛选
-    if (search) {
-      if (clientType === 'domestic') {
-        where.title = Like(`%${search}%`);
-      } else {
-        where.titleEn = Like(`%${search}%`);
-      }
+    // 价格范围筛选
+    if (minPrice) {
+      queryBuilder.andWhere('product.domesticPrice >= :minPrice', { minPrice });
+    }
+    if (maxPrice) {
+      queryBuilder.andWhere('product.domesticPrice <= :maxPrice', { maxPrice });
     }
 
-    // 价格筛选
-    if (minPrice || maxPrice) {
-      const priceField = clientType === 'domestic' ? 'domesticPrice' : 'overseasPrice';
-      if (minPrice) where[priceField] = MoreThanOrEqual(minPrice);
-      if (maxPrice) {
-        const existing = where[priceField];
-        where[priceField] = existing 
-          ? { ...existing, ...LessThanOrEqual(maxPrice) } 
-          : LessThanOrEqual(maxPrice);
-      }
+    // 商户筛选
+    if (merchantId) {
+      queryBuilder.andWhere('product.merchantId = :merchantId', { merchantId });
     }
 
-    // 排序逻辑
-    let order: any = { createdAt: 'DESC' };
+    // 排序
     switch (sort) {
       case 'price_asc':
-        const priceFieldAsc = clientType === 'domestic' ? 'domesticPrice' : 'overseasPrice';
-        order = { [priceFieldAsc]: 'ASC' };
+        queryBuilder.orderBy('product.domesticPrice', 'ASC');
         break;
       case 'price_desc':
-        const priceFieldDesc = clientType === 'domestic' ? 'domesticPrice' : 'overseasPrice';
-        order = { [priceFieldDesc]: 'DESC' };
+        queryBuilder.orderBy('product.domesticPrice', 'DESC');
         break;
-      case 'stock_desc':
-        order = { stockQty: 'DESC' };
+      case 'newest':
+      default:
+        queryBuilder.orderBy('product.createdAt', 'DESC');
         break;
     }
 
-    // 查询数据
-    const [products, total] = await this.productRepository.findAndCount({
-      where,
-      relations: ['category', 'merchant'],
-      order,
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    // 分页
+    const total = await queryBuilder.getCount();
+    queryBuilder.skip((page - 1) * limit).take(limit);
 
-    // 格式化返回数据
-    const formattedProducts = products.map((product) => this.formatProduct(product, clientType));
+    const data = await queryBuilder.getMany();
 
     return {
-      success: true,
-      data: formattedProducts,
-      pagination: {
+      data,
+      meta: {
+        total,
         page,
         limit,
-        total,
         totalPages: Math.ceil(total / limit),
       },
     };
   }
 
-  async findOne(id: string, clientType: 'domestic' | 'overseas') {
-    const product = await this.productRepository.findOne({
+  /**
+   * 获取商品详情
+   */
+  async findOne(id: string): Promise<Product> {
+    const product = await this.productsRepository.findOne({
       where: { id },
       relations: ['category', 'merchant'],
     });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('商品不存在');
     }
 
-    // 检查可见性
-    if (clientType === 'domestic' && !product.displayDomestic) {
-      throw new NotFoundException('Product not available for domestic users');
-    }
-    if (clientType === 'overseas' && !product.displayOverseas) {
-      throw new NotFoundException('Product not available for overseas users');
-    }
-
-    // 增加浏览次数
-    await this.productRepository.increment({ id }, 'viewCount', 1);
-
-    return {
-      success: true,
-      data: this.formatProduct(product, clientType, true),
-    };
+    return product;
   }
 
-  async findSimilar(id: string, limit: number = 4) {
-    const product = await this.productRepository.findOne({
-      where: { id },
+  /**
+   * 获取相似商品
+   */
+  async findSimilar(id: string, limit: number = 5) {
+    const product = await this.findOne(id);
+
+    const similarProducts = await this.productsRepository.find({
+      where: {
+        category: { id: product.category.id },
+        id: { $ne: id }, // 排除当前商品
+        status: 'approved',
+      },
       relations: ['category'],
+      order: { stockQty: 'DESC' },
+      take: limit,
+    });
+
+    return similarProducts;
+  }
+
+  /**
+   * 更新商品
+   */
+  async update(
+    id: string,
+    userId: string,
+    updateData: Partial<Product>
+  ): Promise<Product> {
+    const product = await this.productsRepository.findOne({
+      where: { id },
     });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('商品不存在');
     }
 
-    const similarProducts = await this.productRepository.find({
-      where: {
-        categoryId: product.categoryId,
-        id: Not(id),
-        status: 'approved',
-        displayOverseas: true,
-      },
-      relations: ['category'],
-      take: limit,
-      order: { viewCount: 'DESC' },
-    });
-
-    return {
-      success: true,
-      data: similarProducts.map((p) => this.formatProduct(p, 'overseas')),
-    };
-  }
-
-  async create(createProductDto: CreateProductDto, merchantId: string) {
-    const product = this.productRepository.create({
-      ...createProductDto,
-      merchantId,
-    });
-    return await this.productRepository.save(product);
-  }
-
-  async update(id: string, updateData: Partial<Product>) {
-    await this.productRepository.update({ id }, updateData);
-    return await this.findOne(id, 'domestic');
-  }
-
-  async delete(id: string) {
-    await this.productRepository.delete({ id });
-    return { success: true };
-  }
-
-  // 格式化商品数据
-  private formatProduct(product: Product, clientType: 'domestic' | 'overseas', detailed: boolean = false) {
-    const base = {
-      id: product.id,
-      title: clientType === 'domestic' ? product.title : product.titleEn,
-      description: clientType === 'domestic' ? product.description : product.descriptionEn,
-      slug: product.slug,
-      price: clientType === 'domestic' ? product.domesticPrice : product.overseasPrice,
-      currency: clientType === 'domestic' ? 'CNY' : 'USD',
-      stockQty: product.stockQty,
-      minOrderQty: clientType === 'domestic' ? 1 : product.minOrderQty,
-      images: product.images,
-      isExpired: product.isExpired,
-      expireDate: product.expireDate,
-      category: {
-        id: product.category?.id,
-        name: clientType === 'domestic' ? product.category?.name : product.category?.nameEn,
-        iconUrl: product.category?.iconUrl,
-      },
-      createdAt: product.createdAt,
-    };
-
-    if (detailed) {
-      return {
-        ...base,
-        videos: product.videos,
-        specifications: product.specifications,
-        wholesaleTiers: product.wholesaleTiers,
-        merchant: {
-          id: product.merchant?.id,
-          companyName: product.merchant?.companyName,
-          rating: product.merchant?.rating,
-          verified: product.merchant?.status === 'approved',
-          completedOrders: product.merchant?.completedOrders,
-          responseTime: product.merchant?.responseTime,
-        },
-        viewCount: product.viewCount,
-        soldCount: product.soldCount,
-        inquiryCount: product.inquiryCount,
-      };
+    // 权限检查
+    if (product.userId !== userId) {
+      throw new ForbiddenException('无权修改此商品');
     }
 
-    return base;
+    // 验证类目
+    if (updateData.category) {
+      const category = await this.categoriesRepository.findOne({
+        where: { id: updateData.category.id },
+      });
+      if (!category) {
+        throw new NotFoundException('类目不存在');
+      }
+    }
+
+    Object.assign(product, updateData);
+    product.updatedAt = new Date();
+
+    return this.productsRepository.save(product);
+  }
+
+  /**
+   * 删除商品
+   */
+  async remove(id: string, userId: string): Promise<void> {
+    const product = await this.productsRepository.findOne({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new NotFoundException('商品不存在');
+    }
+
+    // 权限检查
+    if (product.userId !== userId) {
+      throw new ForbiddenException('无权删除此商品');
+    }
+
+    await this.productsRepository.remove(product);
+  }
+
+  /**
+   * 上架商品
+   */
+  async approve(id: string, userId: string): Promise<Product> {
+    const product = await this.findOne(id);
+    product.status = 'approved';
+    product.approvedAt = new Date();
+    return this.productsRepository.save(product);
+  }
+
+  /**
+   * 下架商品
+   */
+  async reject(id: string, userId: string): Promise<Product> {
+    const product = await this.findOne(id);
+    product.status = 'rejected';
+    return this.productsRepository.save(product);
   }
 }
-
-// 使用 TypeORM 的 Not 操作符
-import { Not } from 'typeorm';

@@ -1,103 +1,116 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@ApiTags('products')
+@ApiTags('商品管理')
 @Controller('products')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  /**
-   * 获取商品列表（根据客户端类型自动过滤）
-   */
+  @Post()
+  @ApiOperation({ summary: '创建商品' })
+  @ApiResponse({ status: 201, description: '创建成功' })
+  @ApiResponse({ status: 400, description: '参数错误' })
+  async create(@Request() req, @Body() createProductDto: CreateProductDto) {
+    return this.productsService.create(
+      req.user.userId,
+      req.user.merchantId,
+      createProductDto
+    );
+  }
+
   @Get()
   @ApiOperation({ summary: '获取商品列表' })
-  @ApiQuery({ name: 'category', required: false, description: '类目ID' })
-  @ApiQuery({ name: 'page', required: false, description: '页码', example: 1 })
-  @ApiQuery({ name: 'limit', required: false, description: '每页数量', example: 20 })
-  @ApiQuery({ name: 'search', required: false, description: '搜索关键词' })
-  @ApiQuery({ name: 'sort', required: false, enum: ['newest', 'price_asc', 'price_desc', 'stock_desc'] })
-  @ApiQuery({ name: 'minPrice', required: false, description: '最低价格' })
-  @ApiQuery({ name: 'maxPrice', required: false, description: '最高价格' })
-  async findAll(@Req() req: any, @Query() query: any) {
-    const clientType = req.clientType || 'domestic';
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'category', required: false })
+  @ApiQuery({ name: 'minPrice', required: false })
+  @ApiQuery({ name: 'maxPrice', required: false })
+  @ApiQuery({ name: 'sort', required: false })
+  findAll(
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('category') category?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('sort') sort?: 'newest' | 'price_asc' | 'price_desc',
+  ) {
     return this.productsService.findAll({
-      clientType,
-      category: query.category,
-      page: parseInt(query.page) || 1,
-      limit: parseInt(query.limit) || 20,
-      search: query.search,
-      sort: query.sort,
-      minPrice: parseFloat(query.minPrice),
-      maxPrice: parseFloat(query.maxPrice),
+      page: page ? parseInt(page) : undefined,
+      limit: limit ? parseInt(limit) : undefined,
+      search,
+      category,
+      minPrice: minPrice ? parseFloat(minPrice) : undefined,
+      maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+      sort,
+      merchantId: req.user.merchantId,
     });
   }
 
-  /**
-   * 获取商品详情
-   */
   @Get(':id')
   @ApiOperation({ summary: '获取商品详情' })
-  async findOne(@Req() req: any, @Param('id') id: string) {
-    const clientType = req.clientType || 'domestic';
-    return this.productsService.findOne(id, clientType);
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 404, description: '商品不存在' })
+  findOne(@Param('id') id: string) {
+    return this.productsService.findOne(id);
   }
 
-  /**
-   * 获取相似商品
-   */
   @Get(':id/similar')
   @ApiOperation({ summary: '获取相似商品' })
-  @ApiQuery({ name: 'limit', required: false, description: '返回数量', example: 4 })
-  async findSimilar(@Param('id') id: string, @Query('limit') limit: number = 4) {
-    return this.productsService.findSimilar(id, limit);
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 404, description: '商品不存在' })
+  findSimilar(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.productsService.findSimilar(id, limit ? parseInt(limit) : 5);
   }
 
-  /**
-   * 创建商品（需要商户认证）
-   */
-  @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: '创建商品' })
-  async create(@Req() req: any, @Body() createProductDto: CreateProductDto) {
-    // 从JWT获取商户ID
-    const merchantId = req.user.merchantId;
-    return this.productsService.create(createProductDto, merchantId);
-  }
-
-  /**
-   * 更新商品
-   */
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: '更新商品' })
-  async update(@Param('id') id: string, @Body() updateData: any) {
-    return this.productsService.update(id, updateData);
+  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiResponse({ status: 404, description: '商品不存在' })
+  @ApiResponse({ status: 403, description: '无权修改' })
+  update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
+    return this.productsService.update(id, req.user.userId, updateProductDto);
   }
 
-  /**
-   * 删除商品
-   */
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '删除商品' })
-  async remove(@Param('id') id: string) {
-    return this.productsService.delete(id);
+  @ApiResponse({ status: 204, description: '删除成功' })
+  @ApiResponse({ status: 404, description: '商品不存在' })
+  @ApiResponse({ status: 403, description: '无权删除' })
+  remove(@Request() req, @Param('id') id: string) {
+    return this.productsService.remove(id, req.user.userId);
+  }
+
+  @Post(':id/approve')
+  @ApiOperation({ summary: '上架商品' })
+  @ApiResponse({ status: 200, description: '上架成功' })
+  @ApiResponse({ status: 404, description: '商品不存在' })
+  approve(@Request() req, @Param('id') id: string) {
+    return this.productsService.approve(id, req.user.userId);
+  }
+
+  @Post(':id/reject')
+  @ApiOperation({ summary: '下架商品' })
+  @ApiResponse({ status: 200, description: '下架成功' })
+  @ApiResponse({ status: 404, description: '商品不存在' })
+  reject(@Request() req, @Param('id') id: string) {
+    return this.productsService.reject(id, req.user.userId);
   }
 }

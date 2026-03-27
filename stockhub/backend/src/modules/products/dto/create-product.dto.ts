@@ -1,91 +1,53 @@
-import { IsString, IsNumber, IsOptional, IsArray, ValidateNested, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray } from 'class-validator';
 
 export class CreateProductDto {
-  @IsNumber()
-  categoryId: number;
-
+  @ApiProperty({ description: '商品标题' })
   @IsString()
+  @IsNotEmpty()
   title: string;
 
+  @ApiProperty({ description: '商品描述' })
   @IsString()
   @IsOptional()
   description?: string;
 
+  @ApiProperty({ description: '类目ID' })
   @IsString()
   @IsOptional()
-  titleEn?: string;
+  categoryId?: string;
 
+  @ApiProperty({ description: '库存数量' })
+  @IsNumber()
+  @IsNotEmpty()
+  stockQty: number;
+
+  @ApiProperty({ description: '国内价格（元）' })
+  @IsNumber()
+  @IsNotEmpty()
+  domesticPrice: number;
+
+  @ApiProperty({ description: '海外价格（美元）' })
+  @IsNumber()
+  @IsOptional()
+  overseasPrice?: number;
+
+  @ApiProperty({ description: '是否临期' })
+  @IsBoolean()
+  @IsOptional()
+  isExpired?: boolean;
+
+  @ApiProperty({ description: '到期日期' })
   @IsString()
   @IsOptional()
-  descriptionEn?: string;
+  expireDate?: string;
 
-  @IsString()
-  @IsOptional()
-  slug?: string;
-
+  @ApiProperty({ description: '商品图片URL列表' })
   @IsArray()
   @IsOptional()
   images?: string[];
 
-  @IsArray()
+  @ApiProperty({ description: '规格参数' })
   @IsOptional()
-  videos?: string[];
-
-  @IsString()
-  @IsOptional()
-  sku?: string;
-
-  @IsString()
-  @IsOptional()
-  brand?: string;
-
-  @IsNumber()
-  @Min(0)
-  stockQty: number;
-
-  @IsNumber()
-  domesticPrice: number;
-
-  @IsNumber()
-  overseasPrice: number;
-
-  @IsNumber()
-  @Min(1)
-  @IsOptional()
-  minOrderQty?: number;
-
-  @IsArray()
-  @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => WholesaleTierDto)
-  wholesaleTiers?: WholesaleTierDto[];
-
-  @IsNumber()
-  @IsOptional()
-  displayDomestic?: boolean;
-
-  @IsNumber()
-  @IsOptional()
-  displayOverseas?: boolean;
-
-  @IsString()
-  @IsOptional()
-  specifications?: string;
-}
-
-export class WholesaleTierDto {
-  @IsNumber()
-  minQty: number;
-
-  @IsNumber()
-  unitPrice: number;
-
-  @IsString()
-  @IsOptional()
-  currency?: string;
-
-  @IsString()
-  @IsOptional()
-  savings?: string;
+  specifications?: Record<string, any>;
 }
