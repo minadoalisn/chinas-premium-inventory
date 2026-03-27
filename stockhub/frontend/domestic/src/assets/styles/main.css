@@ -1,0 +1,59 @@
+/* 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100vh;
+}
+
+/* 工具类 */
+.text-red-500 {
+  color: #f56c6c;
+}
+
+.text-orange-500 {
+  color: #e67e22;
+}
+
+.text-green-500 {
+  color: #67c23a;
+}
+
+.text-blue-500 {
+  color: #409eff;
+}
+
+.text-purple-500 {
+  color: #9b59b6;
+}
+
+.bg-red-500 {
+  background-color: #f56c6c;
+}
+
+.bg-orange-500 {
+  background-color: #e67e22;
+}
+
+.bg-green-500 {
+  background-color: #67c23a;
+}
+
+.bg-blue-500 {
+  background-color: #409eff;
+}
+
+.bg-purple-500 {
+  background-color: #9b59b6;
+}

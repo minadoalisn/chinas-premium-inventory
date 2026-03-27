@@ -6,3 +6,6 @@
 !/scripts
 !/.coze
 !/.gitignore
+
+# 3. 追踪 stockhub 项目
+!/stockhub
