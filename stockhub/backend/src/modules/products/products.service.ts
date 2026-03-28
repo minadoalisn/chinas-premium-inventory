@@ -33,9 +33,8 @@ export class ProductsService {
 
     const product = this.productsRepository.create({
       ...createData,
-      userId,
       merchantId,
-      status: 'pending',
+      status: 'approved',
     });
 
     return this.productsRepository.save(product);
@@ -151,13 +150,12 @@ export class ProductsService {
     const similarProducts = await this.productsRepository.find({
       where: {
         category: { id: product.category.id },
-        id: { $ne: id }, // 排除当前商品
         status: 'approved',
       },
       relations: ['category'],
       order: { stockQty: 'DESC' },
       take: limit,
-    });
+    }).then(products => products.filter(p => p.id !== id));
 
     return similarProducts;
   }
@@ -179,7 +177,7 @@ export class ProductsService {
     }
 
     // 权限检查
-    if (product.userId !== userId) {
+    if (product.merchantId !== userId) {
       throw new ForbiddenException('无权修改此商品');
     }
 
@@ -212,7 +210,7 @@ export class ProductsService {
     }
 
     // 权限检查
-    if (product.userId !== userId) {
+    if (product.merchantId !== userId) {
       throw new ForbiddenException('无权删除此商品');
     }
 
@@ -225,7 +223,6 @@ export class ProductsService {
   async approve(id: string, userId: string): Promise<Product> {
     const product = await this.findOne(id);
     product.status = 'approved';
-    product.approvedAt = new Date();
     return this.productsRepository.save(product);
   }
 

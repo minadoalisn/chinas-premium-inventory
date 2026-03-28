@@ -17,7 +17,7 @@ export class DemandsController {
   @ApiResponse({ status: 201, description: '创建成功' })
   @ApiResponse({ status: 400, description: '参数错误' })
   async create(@Request() req, @Body() createDemandDto: CreateDemandDto) {
-    return this.demandsService.create(req.user.userId, createDemandDto);
+    return this.demandsService.create(req.user.buyerId, createDemandDto);
   }
 
   @Get()
@@ -50,7 +50,7 @@ export class DemandsController {
   @ApiResponse({ status: 200, description: '获取成功' })
   getMyDemands(@Request() req) {
     return this.demandsService.findAll({
-      userId: req.user.userId,
+      userId: req.user.buyerId,
     });
   }
 
@@ -79,7 +79,7 @@ export class DemandsController {
     @Param('id') id: string,
     @Body() updateDemandDto: UpdateDemandDto,
   ) {
-    return this.demandsService.update(id, req.user.userId, updateDemandDto);
+    return this.demandsService.update(id, req.user.buyerId, updateDemandDto);
   }
 
   @Delete(':id')
@@ -89,6 +89,6 @@ export class DemandsController {
   @ApiResponse({ status: 404, description: '求购不存在' })
   @ApiResponse({ status: 403, description: '无权删除' })
   remove(@Request() req, @Param('id') id: string) {
-    return this.demandsService.remove(id, req.user.userId);
+    return this.demandsService.remove(id, req.user.buyerId);
   }
 }

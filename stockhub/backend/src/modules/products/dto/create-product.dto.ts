@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, IsBoolean } from 'class-validator';
 
 export class CreateProductDto {
   @ApiProperty({ description: '商品标题' })
@@ -15,7 +15,7 @@ export class CreateProductDto {
   @ApiProperty({ description: '类目ID' })
   @IsString()
   @IsOptional()
-  categoryId?: string;
+  categoryId?: number;
 
   @ApiProperty({ description: '库存数量' })
   @IsNumber()
@@ -40,7 +40,7 @@ export class CreateProductDto {
   @ApiProperty({ description: '到期日期' })
   @IsString()
   @IsOptional()
-  expireDate?: string;
+  expireDate?: Date;
 
   @ApiProperty({ description: '商品图片URL列表' })
   @IsArray()

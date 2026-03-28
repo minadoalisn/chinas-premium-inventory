@@ -5,21 +5,20 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
-  OneToMany,
   JoinColumn,
   Index,
 } from 'typeorm';
-import { Category } from './category.entity';
-import { Merchant } from './merchant.entity';
+import { Category } from '../../categories/entities/category.entity';
+import { Merchant } from '../../merchants/entities/merchant.entity';
 
 @Entity('products')
-@Index('idx_category', ['category'])
-@Index('idx_merchant', ['merchant'])
+@Index('idx_category', ['categoryId'])
+@Index('idx_merchant', ['merchantId'])
 @Index('idx_status', ['status'])
 @Index('idx_display_domestic', ['displayDomestic', 'status'])
 @Index('idx_display_overseas', ['displayOverseas', 'status'])
 export class Product {
-  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
+  @PrimaryGeneratedColumn('increment', { type: 'integer' })
   id: string;
 
   @Column({ name: 'merchant_id', type: 'bigint' })
@@ -110,11 +109,11 @@ export class Product {
 
   // 审核状态
   @Column({
-    type: 'enum',
-    enum: ['pending', 'approved', 'rejected', 'sold_out'],
+    type: 'varchar',
+    length: 20,
     default: 'pending',
   })
-  status: 'pending' | 'approved' | 'rejected' | 'sold_out';
+  status: string;
 
   // SEO信息
   @Column({ name: 'seo_title', type: 'varchar', length: 255, nullable: true })
@@ -143,6 +142,6 @@ export class Product {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @Column({ name: 'synced_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'synced_at', type: 'datetime', nullable: true })
   syncedAt: Date;
 }

@@ -32,8 +32,8 @@ export class DemandsService {
 
     const demand = this.demandsRepository.create({
       ...createData,
-      userId,
-      status: 'pending',
+      buyerId: userId,
+      status: 'open',
     });
 
     return this.demandsRepository.save(demand);
@@ -71,16 +71,16 @@ export class DemandsService {
 
     // 用户筛选（我的求购）
     if (userId) {
-      queryBuilder.andWhere('demand.userId = :userId', { userId });
+      queryBuilder.andWhere('demand.buyerId = :userId', { userId });
     }
 
     // 排序
     switch (sort) {
       case 'quantity':
-        queryBuilder.orderBy('demand.quantity', 'DESC');
+        queryBuilder.orderBy('demand.minQty', 'DESC');
         break;
       case 'price':
-        queryBuilder.orderBy('demand.budget', 'DESC');
+        queryBuilder.orderBy('demand.maxPrice', 'DESC');
         break;
       case 'newest':
       default:
@@ -138,7 +138,7 @@ export class DemandsService {
     }
 
     // 权限检查
-    if (demand.userId !== userId) {
+    if (demand.buyerId !== userId) {
       throw new ForbiddenException('无权修改此求购');
     }
 
@@ -171,7 +171,7 @@ export class DemandsService {
     }
 
     // 权限检查
-    if (demand.userId !== userId) {
+    if (demand.buyerId !== userId) {
       throw new ForbiddenException('无权删除此求购');
     }
 
@@ -185,17 +185,17 @@ export class DemandsService {
     const demand = await this.findOne(id);
 
     // 简单匹配逻辑：匹配类目和价格范围
-    const { category, budget, quantity } = demand;
+    const { category, maxPrice, minQty } = demand;
 
     const queryBuilder = this.demandsRepository
       .createQueryBuilder('product')
       .where('product.categoryId = :categoryId', { categoryId: category.id })
-      .andWhere('product.stockQty >= :minQuantity', { minQuantity: quantity })
+      .andWhere('product.stockQty >= :minQuantity', { minQuantity: minQty })
       .andWhere('product.status = :status', { status: 'approved' });
 
-    // 如果有预算，按预算筛选
-    if (budget) {
-      queryBuilder.andWhere('product.domesticPrice <= :budget', { budget });
+    // 如果有价格上限，按价格筛选
+    if (maxPrice) {
+      queryBuilder.andWhere('product.domesticPrice <= :maxPrice', { maxPrice });
     }
 
     queryBuilder.orderBy('product.stockQty', 'DESC').limit(20);

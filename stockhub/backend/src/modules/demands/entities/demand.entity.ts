@@ -8,15 +8,15 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { User } from './user.entity';
-import { Category } from './category.entity';
+import { User } from '../../users/entities/user.entity';
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity('demands')
 @Index('idx_category', ['categoryId'])
 @Index('idx_status', ['status'])
 @Index('idx_buyer', ['buyerId'])
 export class Demand {
-  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
+  @PrimaryGeneratedColumn('increment', { type: 'integer' })
   id: string;
 
   @Column({ name: 'buyer_id', type: 'bigint' })
@@ -48,11 +48,11 @@ export class Demand {
 
   // 状态
   @Column({
-    type: 'enum',
-    enum: ['open', 'matched', 'closed'],
+    type: 'varchar',
+    length: 20,
     default: 'open',
   })
-  status: 'open' | 'matched' | 'closed';
+  status: string;
 
   @Column({ name: 'matched_count', type: 'int', default: 0 })
   matchedCount: number;

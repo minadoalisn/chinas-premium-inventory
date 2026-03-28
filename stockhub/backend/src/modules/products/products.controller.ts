@@ -18,7 +18,7 @@ export class ProductsController {
   @ApiResponse({ status: 400, description: '参数错误' })
   async create(@Request() req, @Body() createProductDto: CreateProductDto) {
     return this.productsService.create(
-      req.user.userId,
+      req.user.merchantId,
       req.user.merchantId,
       createProductDto
     );
@@ -85,7 +85,7 @@ export class ProductsController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return this.productsService.update(id, req.user.userId, updateProductDto);
+    return this.productsService.update(id, req.user.merchantId, updateProductDto);
   }
 
   @Delete(':id')
@@ -95,7 +95,7 @@ export class ProductsController {
   @ApiResponse({ status: 404, description: '商品不存在' })
   @ApiResponse({ status: 403, description: '无权删除' })
   remove(@Request() req, @Param('id') id: string) {
-    return this.productsService.remove(id, req.user.userId);
+    return this.productsService.remove(id, req.user.merchantId);
   }
 
   @Post(':id/approve')
@@ -103,7 +103,7 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: '上架成功' })
   @ApiResponse({ status: 404, description: '商品不存在' })
   approve(@Request() req, @Param('id') id: string) {
-    return this.productsService.approve(id, req.user.userId);
+    return this.productsService.approve(id, req.user.merchantId);
   }
 
   @Post(':id/reject')
@@ -111,6 +111,6 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: '下架成功' })
   @ApiResponse({ status: 404, description: '商品不存在' })
   reject(@Request() req, @Param('id') id: string) {
-    return this.productsService.reject(id, req.user.userId);
+    return this.productsService.reject(id, req.user.merchantId);
   }
 }

@@ -154,7 +154,8 @@ export class AdminService {
   }
 
   async updateUserStatus(id: string, status: 'active' | 'inactive') {
-    await this.userRepository.update(id, { status });
+    const isActive = status === 'active';
+    await this.userRepository.update(id, { isActive });
     return { success: true, message: '用户状态已更新' };
   }
 
@@ -272,7 +273,7 @@ export class AdminService {
   }
 
   async unlistProduct(id: string) {
-    await this.productRepository.update(id, { status: 'unlisted' });
+    await this.productRepository.update(id, { status: 'rejected' });
     return { success: true, message: '商品已下架' };
   }
 
@@ -324,7 +325,6 @@ export class AdminService {
     await this.orderRepository.update(id, {
       status: 'shipped',
       trackingNumber,
-      logisticsCompany,
     });
     return { success: true, message: '订单已发货' };
   }

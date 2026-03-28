@@ -17,7 +17,7 @@ export class UsersController {
       success: true,
       data: users.map((u) => ({
         id: u.id,
-        email: u.email,
+        email: u.phone,
         name: u.name,
         phone: u.phone,
         role: u.role,
@@ -37,7 +37,7 @@ export class UsersController {
       success: true,
       data: {
         id: user.id,
-        email: user.email,
+        email: user.phone,
         name: user.name,
         phone: user.phone,
         role: user.role,
@@ -54,7 +54,7 @@ export class UsersController {
       success: true,
       data: {
         id: user.id,
-        email: user.email,
+        email: user.phone,
         name: user.name,
       },
     };
@@ -70,7 +70,7 @@ export class UsersController {
       success: true,
       data: {
         id: user.id,
-        email: user.email,
+        email: user.phone,
         name: user.name,
       },
     };

@@ -1,5 +1,5 @@
 import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { StatsService } from './stats.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -27,7 +27,6 @@ export class StatsController {
   @Get('demands')
   @ApiOperation({ summary: '获取求购统计' })
   @ApiResponse({ status: 200, description: '获取成功' })
-  @Query('userId') userId?: string)
   async getDemandStats(@Query('userId') userId?: string) {
     return this.statsService.getDemandStats(userId);
   }
@@ -35,7 +34,6 @@ export class StatsController {
   @Get('products')
   @ApiOperation({ summary: '获取商品统计' })
   @ApiResponse({ status: 200, description: '获取成功' })
-  @Query('merchantId') merchantId?: string)
   async getProductStats(@Query('merchantId') merchantId?: string) {
     return this.statsService.getProductStats(merchantId);
   }
@@ -43,7 +41,6 @@ export class StatsController {
   @Get('orders')
   @ApiOperation({ summary: '获取订单统计' })
   @ApiResponse({ status: 200, description: '获取成功' })
-  @Query('userId') userId?: string)
   async getOrderStats(@Query('userId') userId?: string) {
     return this.statsService.getOrderStats(userId);
   }
@@ -51,7 +48,6 @@ export class StatsController {
   @Get('inquiries')
   @ApiOperation({ summary: '获取询盘统计' })
   @ApiResponse({ status: 200, description: '获取成功' })
-  @Query('userId') userId?: string)
   async getInquiryStats(@Query('userId') userId?: string) {
     return this.statsService.getInquiryStats(userId);
   }
@@ -59,7 +55,6 @@ export class StatsController {
   @Get('recent')
   @ApiOperation({ summary: '获取近期数据' })
   @ApiResponse({ status: 200, description: '获取成功' })
-  @Query('days') days?: string
   async getRecentData(@Query('days') days?: string) {
     const daysNum = days ? parseInt(days) : 30;
     return this.statsService.getRecentData(daysNum);
@@ -68,7 +63,6 @@ export class StatsController {
   @Get('categories/top')
   @ApiOperation({ summary: '获取热门类目' })
   @ApiResponse({ status: 200, description: '获取成功' })
-  @Query('limit') limit?: string
   async getTopCategories(@Query('limit') limit?: string) {
     const limitNum = limit ? parseInt(limit) : 10;
     return this.statsService.getTopCategories(limitNum);

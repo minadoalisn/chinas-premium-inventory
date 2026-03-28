@@ -8,12 +8,12 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { User } from './user.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('merchants')
 @Index('idx_status', ['status'])
 export class Merchant {
-  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
+  @PrimaryGeneratedColumn('increment', { type: 'integer' })
   id: string;
 
   @Column({ name: 'user_id', type: 'bigint' })
@@ -27,7 +27,7 @@ export class Merchant {
   @Column({ name: 'company_name', type: 'varchar', length: 200 })
   companyName: string;
 
-  @Column({ name: 'business_license', type: 'varchar', length: 50, unique: true })
+  @Column({ name: 'business_license', type: 'varchar', length: 50, unique: true, })
   businessLicense: string;
 
   @Column({ name: 'contact_person', type: 'varchar', length: 100 })
@@ -73,12 +73,8 @@ export class Merchant {
   productImages: string[];
 
   // 商户状态
-  @Column({
-    type: 'enum',
-    enum: ['pending', 'approved', 'rejected', 'suspended'],
-    default: 'pending',
-  })
-  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  @Column({ type: 'varchar', length: 20, default: 'pending' })
+  status: string;
 
   // 信用评分
   @Column({ type: 'decimal', precision: 2, scale: 1, default: 5.0 })
@@ -113,6 +109,6 @@ export class Merchant {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @Column({ name: 'approved_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'approved_at', type: 'datetime', nullable: true })
   approvedAt: Date;
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateDemandDto {
   @ApiProperty({ description: '需求标题' })
@@ -10,35 +10,25 @@ export class CreateDemandDto {
   @ApiProperty({ description: '需求描述' })
   @IsString()
   @IsOptional()
-  description?: string;
+  demandDesc?: string;
 
-  @ApiProperty({ description: '求购数量' })
+  @ApiProperty({ description: '最小数量' })
   @IsNumber()
   @IsNotEmpty()
-  quantity: number;
+  minQty: number;
 
-  @ApiProperty({ description: '单位' })
-  @IsString()
-  @IsNotEmpty()
-  unit: string;
-
-  @ApiProperty({ description: '预算单价' })
-  @IsString()
+  @ApiProperty({ description: '最高价格' })
+  @IsNumber()
   @IsOptional()
-  budget?: string;
+  maxPrice?: number;
 
   @ApiProperty({ description: '收货地址' })
   @IsString()
   @IsOptional()
-  deliveryAddress?: string;
-
-  @ApiProperty({ description: '是否加急' })
-  @IsBoolean()
-  @IsOptional()
-  isUrgent?: boolean;
+  location?: string;
 
   @ApiProperty({ description: '类目ID' })
-  @IsString()
+  @IsNumber()
   @IsOptional()
-  categoryId?: string;
+  categoryId?: number;
 }

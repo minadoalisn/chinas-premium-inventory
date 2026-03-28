@@ -7,16 +7,12 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { MerchantsModule } from './modules/merchants/merchants.module';
 import { DemandsModule } from './modules/demands/demands.module';
-import { ProductsModule } from './modules/products/products.module';
+// import { ProductsModule } from './modules/products/products.module';
 import { CategoriesModule } from './modules/categories/categories.module';
-import { InquiriesModule } from './modules/inquiries/inquiries.module';
-import { OrdersModule } from './modules/orders/orders.module';
+// import { InquiriesModule } from './modules/inquiries/inquiries.module';
+// import { OrdersModule } from './modules/orders/orders.module';
 import { SmsModule } from './modules/sms/sms.module';
-import { UploadModule } from './modules/oss/upload.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
-import { StatsModule } from './modules/stats/stats.module';
-import { RedisModule } from './modules/redis/redis.module';
-import { DataSeederService } from './common/data-seeder.service';
+// import { StatsModule } from './modules/stats/stats.module';
 
 @Module({
   imports: [
@@ -26,7 +22,7 @@ import { DataSeederService } from './common/data-seeder.service';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService): any => ({
         type: configService.get('DB_TYPE', 'sqlite'),
         database: configService.get('DB_DATABASE', './data/stockhub.sqlite'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
@@ -40,18 +36,15 @@ import { DataSeederService } from './common/data-seeder.service';
     UsersModule,
     MerchantsModule,
     DemandsModule,
-    ProductsModule,
+    // ProductsModule,  // 暂时禁用
     CategoriesModule,
-    InquiriesModule,
-    OrdersModule,
+    // InquiriesModule,  // 暂时禁用
+    // OrdersModule,  // 暂时禁用
     SmsModule,
-    UploadModule,
-    NotificationsModule,
-    StatsModule,
-    RedisModule,
+    // StatsModule,  // 暂时禁用
   ],
   controllers: [AppController],
-  providers: [AppService, DataSeederService],
+  providers: [AppService],
   exports: [],
 })
 export class AppModule {}

@@ -1,22 +1,22 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Post, Body, Get } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@ApiTags('通知服务')
+@ApiTags('消息通知')
 @Controller('notifications')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @Post('test')
-  @ApiOperation({ summary: '测试通知' })
-  @ApiResponse({ status: 200, description: '通知发送成功' })
-  async testNotification(@Request() req) {
-    this.notificationsService.broadcastNotification('DEMAND_MATCHED', {
-      message: '这是一条测试通知',
-    });
-    return { message: '通知已发送' };
+  @Post()
+  @ApiOperation({ summary: '发送通知' })
+  async sendNotification(@Body() data: { userId: string; message: string }) {
+    return this.notificationsService.sendNotification(data.userId, data.message);
+  }
+
+  @Get('unread')
+  @ApiOperation({ summary: '获取未读通知' })
+  async getUnreadNotifications() {
+    // 简化实现
+    return { count: 0, notifications: [] };
   }
 }

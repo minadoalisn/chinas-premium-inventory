@@ -5,7 +5,7 @@ import { User } from '../users/entities/user.entity';
 import { Demand } from '../demands/entities/demand.entity';
 import { Product } from '../products/entities/product.entity';
 import { Order } from '../orders/entities/order.entity';
-import { Inqui ry } from '../inquiries/entities/inquiry.entity';
+import { Inquiry } from '../inquiries/entities/inquiry.entity';
 
 @Injectable()
 export class StatsService {
@@ -18,8 +18,8 @@ export class StatsService {
     private productsRepository: Repository<Product>,
     @InjectRepository(Order)
     private ordersRepository: Repository<Order>,
-    @InjectRepository(Inqui ry)
-    private inquiriesRepository: Repository<Inqui ry>,
+    @InjectRepository(Inquiry)
+    private inquiriesRepository: Repository<Inquiry>,
   ) {}
 
   /**

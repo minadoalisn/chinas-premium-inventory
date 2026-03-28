@@ -42,7 +42,7 @@ export class LogisticsService {
   constructor(provider: keyof typeof LOGISTICS_PROVIDERS, isTest = true) {
     const config = LOGISTICS_PROVIDERS[provider]
     this.apiKey = config.apiKey
-    this.apiUrl = isTest && config.testUrl ? config.testUrl : config.apiUrl
+    this.apiUrl = isTest && 'testUrl' in config && config.testUrl ? config.testUrl : config.apiUrl
   }
   
   // 计算运费
