@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - StockHub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #e94560, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .header p { color: #888; }
+    .checkout-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 40px;
+    }
+    @media (max-width: 900px) {
+      .checkout-grid { grid-template-columns: 1fr; }
+    }
+    .section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .section h2 {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      color: #e94560;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .product-item {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+    .product-item img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+      background: #1a1a2e;
+    }
+    .product-info { flex: 1; }
+    .product-info h3 { margin-bottom: 8px; color: #fff; }
+    .product-info p { color: #888; font-size: 0.9rem; margin-bottom: 5px; }
+    .product-price {
+      font-size: 1.4rem;
+      color: #e94560;
+      font-weight: bold;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #888;
+      font-size: 0.9rem;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #e94560;
+      box-shadow: 0 0 20px rgba(233,69,96,0.2);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .order-summary {
+      position: sticky;
+      top: 20px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .order-summary h2 {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      color: #e94560;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .summary-row:last-of-type { border-bottom: none; }
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 0;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #fbbf24;
+    }
+    .btn-checkout {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(90deg, #e94560, #ff6b6b);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 20px;
+    }
+    .btn-checkout:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(233,69,96,0.4);
+    }
+    .btn-checkout:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .stripe-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+      color: #888;
+      font-size: 0.85rem;
+    }
+    .secure-icon { color: #4ade80; }
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .loading.active { display: flex; }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(233,69,96,0.3);
+      border-top-color: #e94560;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg {
+      background: rgba(239,68,68,0.2);
+      border: 1px solid #ef4444;
+      border-radius: 10px;
+      padding: 15px;
+      color: #fca5a5;
+      margin-top: 15px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .quantity-control button {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+    .quantity-control input {
+      width: 60px;
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🛒 Checkout</h1>
+      <p>Complete your order securely</p>
+    </div>
+    
+    <div class="checkout-grid">
+      <div class="left-col">
+        <div class="section">
+          <h2>📦 Order Items</h2>
+          <div id="product-list"></div>
+        </div>
+        
+        <div class="section">
+          <h2>👤 Contact Information</h2>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="name" placeholder="Enter your full name" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="email" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" id="phone" placeholder="+1 234 567 8900" required>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <h2>🚚 Shipping Address</h2>
+          <div class="form-group">
+            <label>Country</label>
+            <select id="country" required>
+              <option value="">Select country</option>
+              <option value="US">United States</option>
+              <option value="GB">United Kingdom</option>
+              <option value="CA">Canada</option>
+              <option value="AU">Australia</option>
+              <option value="DE">Germany</option>
+              <option value="FR">France</option>
+              <option value="JP">Japan</option>
+              <option value="KR">South Korea</option>
+              <option value="SG">Singapore</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Street Address</label>
+            <input type="text" id="address" placeholder="Enter your address" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>City</label>
+              <input type="text" id="city" placeholder="City" required>
+            </div>
+            <div class="form-group">
+              <label>Postal Code</label>
+              <input type="text" id="postal" placeholder="Postal code" required>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <h2>💳 Payment Method</h2>
+          <div id="payment-element" style="margin-bottom: 20px;">
+            <div class="form-group">
+              <label>Card Number</label>
+              <input type="text" id="card-number" placeholder="4242 4242 4242 4242" maxlength="19">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Expiry Date</label>
+                <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5">
+              </div>
+              <div class="form-group">
+                <label>CVC</label>
+                <input type="text" id="card-cvc" placeholder="123" maxlength="4">
+              </div>
+            </div>
+          </div>
+          <div class="error-msg" id="error-msg"></div>
+        </div>
+      </div>
+      
+      <div class="right-col">
+        <div class="order-summary">
+          <h2>📋 Order Summary</h2>
+          <div id="summary-items"></div>
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span id="subtotal">$0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping</span>
+            <span id="shipping">$0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Tax (Estimated)</span>
+            <span id="tax">$0.00</span>
+          </div>
+          <div class="summary-total">
+            <span>Total</span>
+            <span id="total">$0.00</span>
+          </div>
+          <button class="btn-checkout" id="btn-checkout" onclick="processCheckout()">
+            🔒 Pay Now
+          </button>
+          <div class="stripe-badge">
+            <span class="secure-icon">🔒</span>
+            <span>Secured by Stripe</span>
+            <span>💳</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : '';
+    
+    let cartItems = [];
+    let orderData = {
+      items: [],
+      total: 0,
+      shipping: 0,
+      tax: 0
+    };
+
+    // 获取URL参数
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        productId: params.get('productId'),
+        quantity: parseInt(params.get('quantity')) || 1
+      };
+    }
+
+    // 加载产品数据
+    async function loadProduct() {
+      const { productId, quantity } = getParams();
+      if (!productId) {
+        document.getElementById('product-list').innerHTML = '<p style="color:#888;">No product selected</p>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/products/${productId}`);
+        const product = await res.json();
+        
+        if (product.id) {
+          cartItems = [{
+            ...product,
+            quantity: quantity,
+            price: product.supplierPrice || product.supplyPrice * 5 || 99
+          }];
+          renderCart();
+        }
+      } catch (err) {
+        console.error('Failed to load product:', err);
+      }
+    }
+
+    // 渲染购物车
+    function renderCart() {
+      const productList = document.getElementById('product-list');
+      const summaryItems = document.getElementById('summary-items');
+      
+      if (cartItems.length === 0) {
+        productList.innerHTML = '<p style="color:#888;">Your cart is empty</p>';
+        return;
+      }
+
+      let itemsHTML = '';
+      let summaryHTML = '';
+
+      cartItems.forEach((item, index) => {
+        const price = item.supplierPrice || item.supplyPrice * 5 || 99;
+        const originalPrice = item.supplierPrice ? item.supplierPrice * 1.5 : price * 1.5;
+        
+        itemsHTML += `
+          <div class="product-item">
+            <div style="width:100px;height:100px;background:#1a1a2e;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:3rem;">
+              ${item.icon || '📦'}
+            </div>
+            <div class="product-info">
+              <h3>${item.nameEn || item.name || 'Product'}</h3>
+              <p>${item.descriptionEn || item.description || 'Premium quality from China'}</p>
+              <p>Stock: ${item.stock || 999} units available</p>
+              <div class="product-price">$${price.toFixed(2)}</div>
+              <div class="quantity-control">
+                <button onclick="updateQuantity(${index}, -1)">-</button>
+                <input type="number" value="${item.quantity}" min="1" max="${item.stock || 999}" 
+                  onchange="setQuantity(${index}, this.value)">
+                <button onclick="updateQuantity(${index}, 1)">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        summaryHTML += `
+          <div class="summary-row" style="font-size:0.9rem;">
+            <span>${item.nameEn || item.name} × ${item.quantity}</span>
+            <span>$${(price * item.quantity).toFixed(2)}</span>
+          </div>
+        `;
+      });
+
+      productList.innerHTML = itemsHTML;
+      summaryItems.innerHTML = summaryHTML;
+      updateTotals();
+    }
+
+    // 更新数量
+    function updateQuantity(index, delta) {
+      const newQty = Math.max(1, Math.min(cartItems[index].quantity + delta, cartItems[index].stock || 999));
+      cartItems[index].quantity = newQty;
+      renderCart();
+    }
+
+    function setQuantity(index, value) {
+      cartItems[index].quantity = Math.max(1, Math.min(parseInt(value), cartItems[index].stock || 999));
+      renderCart();
+    }
+
+    // 计算总价
+    function updateTotals() {
+      const subtotal = cartItems.reduce((sum, item) => {
+        const price = item.supplierPrice || item.supplyPrice * 5 || 99;
+        return sum + price * item.quantity;
+      }, 0);
+      
+      const shipping = subtotal > 200 ? 0 : 29.99;
+      const tax = subtotal * 0.08;
+      const total = subtotal + shipping + tax;
+
+      orderData = {
+        items: cartItems,
+        subtotal,
+        shipping,
+        tax,
+        total
+      };
+
+      document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('shipping').textContent = shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`;
+      document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+      document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    }
+
+    // 处理结账
+    async function processCheckout() {
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const country = document.getElementById('country').value;
+      const address = document.getElementById('address').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const postal = document.getElementById('postal').value.trim();
+
+      if (!name || !email || !phone || !country || !address || !city || !postal) {
+        showError('Please fill in all required fields');
+        return;
+      }
+
+      if (!validateEmail(email)) {
+        showError('Please enter a valid email address');
+        return;
+      }
+
+      document.getElementById('loading').classList.add('active');
+      document.getElementById('btn-checkout').disabled = true;
+
+      try {
+        // 创建订单
+        const orderPayload = {
+          items: orderData.items.map(item => ({
+            productId: item.id,
+            name: item.nameEn || item.name,
+            price: item.supplierPrice || item.supplyPrice * 5 || 99,
+            quantity: item.quantity
+          })),
+          subtotal: orderData.subtotal,
+          shipping: orderData.shipping,
+          tax: orderData.tax,
+          total: orderData.total,
+          customer: { name, email, phone },
+          shippingAddress: { country, address, city, postal }
+        };
+
+        // 尝试调用创建订单API
+        let orderId = 'ORD' + Date.now();
+        try {
+          const orderRes = await fetch(`${API_BASE}/api/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderPayload)
+          });
+          if (orderRes.ok) {
+            const orderData = await orderRes.json();
+            orderId = orderData.id || orderId;
+          }
+        } catch (e) {
+          console.log('Order API not available, using local order ID');
+        }
+
+        // 模拟Stripe支付
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // 跳转到成功页面
+        const successUrl = new URL('/payment/success.html', window.location.origin);
+        successUrl.searchParams.set('orderId', orderId);
+        successUrl.searchParams.set('total', orderData.total.toFixed(2));
+        successUrl.searchParams.set('email', email);
+        window.location.href = successUrl.toString();
+
+      } catch (err) {
+        console.error('Checkout error:', err);
+        showError('Payment processing failed. Please try again.');
+        document.getElementById('loading').classList.remove('active');
+        document.getElementById('btn-checkout').disabled = false;
+      }
+    }
+
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 5000);
+    }
+
+    // 卡片号格式化
+    document.addEventListener('input', (e) => {
+      if (e.target.id === 'card-number') {
+        let val = e.target.value.replace(/\D/g, '');
+        val = val.replace(/(\d{4})(?=\d)/g, '$1 ');
+        e.target.value = val.substring(0, 19);
+      }
+      if (e.target.id === 'card-expiry') {
+        let val = e.target.value.replace(/\D/g, '');
+        if (val.length >= 2) {
+          val = val.substring(0, 2) + '/' + val.substring(2);
+        }
+        e.target.value = val.substring(0, 5);
+      }
+    });
+
+    // 初始化
+    loadProduct();
+  </script>
+</body>
+</html>

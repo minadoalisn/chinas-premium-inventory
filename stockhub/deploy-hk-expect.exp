@@ -1,0 +1,123 @@
+#!/usr/bin/expect -f
+
+# StockHub 自动化部署脚本（香港服务器）
+
+set timeout 60
+
+# 服务器信息
+set server_ip "172.22.249.225"
+set username "root"
+set password "Adwnzm2009"
+set deploy_package "/workspace/projects/stockhub/deploy-package/stockhub-deploy-20260329_100622.tar.gz"
+
+puts "🚀 开始部署到香港服务器 ($server_ip)..."
+
+# 1. 测试SSH连接
+puts "\nStep 1/5: 测试SSH连接..."
+spawn ssh -o StrictHostKeyChecking=no $username@$server_ip "echo 'SSH连接成功'"
+expect {
+    "password:" {
+        send "$password\r"
+        expect "SSH连接成功"
+        puts "✓ SSH连接成功"
+    }
+    timeout {
+        puts "✗ SSH连接超时"
+        exit 1
+    }
+    eof {
+        puts "✗ SSH连接失败"
+        exit 1
+    }
+}
+
+# 2. 创建目标目录
+puts "\nStep 2/5: 创建目标目录..."
+spawn ssh -o StrictHostKeyChecking=no $username@$server_ip
+expect "password:"
+send "$password\r"
+expect "root@"
+send "mkdir -p /var/www/stockhub\r"
+expect "root@"
+send "exit\r"
+expect eof
+puts "✓ 目录创建成功"
+
+# 3. 上传部署包
+puts "\nStep 3/5: 上传部署包..."
+spawn scp $deploy_package $username@$server_ip:/root/
+expect {
+    "password:" {
+        send "$password\r"
+        expect {
+            "100%" {
+                puts "✓ 部署包上传成功"
+            }
+            timeout {
+                puts "✗ 上传超时"
+                exit 1
+            }
+        }
+    }
+    timeout {
+        puts "✗ 上传超时"
+        exit 1
+    }
+}
+
+# 4. 解压部署包
+puts "\nStep 4/5: 解压部署包..."
+spawn ssh -o StrictHostKeyChecking=no $username@$server_ip
+expect "password:"
+send "$password\r"
+expect "root@"
+send "cd /var/www/stockhub\r"
+expect "root@"
+send "tar -xzf /root/stockhub-deploy-20260329_100622.tar.gz\r"
+expect "root@"
+send "exit\r"
+expect eof
+puts "✓ 部署包解压成功"
+
+# 5. 执行安装
+puts "\nStep 5/5: 执行安装脚本..."
+spawn ssh -o StrictHostKeyChecking=no $username@$server_ip
+expect "password:"
+send "$password\r"
+expect "root@"
+send "cd /var/www/stockhub\r"
+expect "root@"
+send "./install.sh\r"
+
+# 等待安装完成
+expect {
+    "安装完成" {
+        puts "\n✅ 香港服务器部署完成！"
+    }
+    timeout {
+        puts "\n⚠️ 安装超时，请手动检查"
+    }
+    eof {
+        puts "\n📝 安装脚本执行完成"
+    }
+}
+
+# 测试API连接
+puts "\n测试API连接..."
+spawn ssh -o StrictHostKeyChecking=no $username@$server_ip "curl -s http://localhost:3000/api/categories | head -20"
+expect {
+    "password:" {
+        send "$password\r"
+        expect eof
+    }
+    eof {
+        # pass
+    }
+}
+
+puts "\n=================================="
+puts "✅ 部署流程完成"
+puts "=================================="
+puts "访问地址: http://$server_ip"
+puts "API文档: http://$server_ip/api/docs"
+puts "=================================="

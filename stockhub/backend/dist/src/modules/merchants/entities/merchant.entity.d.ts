@@ -1,0 +1,33 @@
+import { User } from '../../users/entities/user.entity';
+export declare class Merchant {
+    id: string;
+    userId: string;
+    user: User;
+    companyName: string;
+    businessLicense: string;
+    contactPerson: string;
+    phone: string;
+    address: string;
+    city: string;
+    province: string;
+    country: string;
+    postalCode: string;
+    factoryArea: number;
+    employeeCount: number;
+    productionLines: number;
+    annualRevenue: number;
+    certifications: string[];
+    productImages: string[];
+    status: string;
+    rating: number;
+    completedOrders: number;
+    totalReviews: number;
+    responseRate: number;
+    responseTime: string;
+    bankName: string;
+    bankAccount: string;
+    swiftCode: string;
+    createdAt: Date;
+    updatedAt: Date;
+    approvedAt: Date;
+}

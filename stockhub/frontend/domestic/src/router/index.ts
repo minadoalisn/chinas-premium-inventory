@@ -47,10 +47,6 @@ const router = createRouter({
       meta: { title: '商户中心', requiresAuth: true },
     },
     {
-      path: '/stats',
-      name: 'Stats',
-      component: () => import('../views/Stats.vue'),
-      meta: { title: '数据统计', requiresAuth: true },
     },
   ],
 })

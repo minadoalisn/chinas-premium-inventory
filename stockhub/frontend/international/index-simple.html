@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockHub - Global Inventory Marketplace</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .header h1 {
+      font-size: 2.5rem;
+      margin: 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .header p {
+      font-size: 1.1rem;
+      margin: 10px 0 0;
+      opacity: 0.9;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .category-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 20px 0;
+      justify-content: center;
+    }
+    .category-item {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.3s;
+      flex: 1;
+      min-width: 150px;
+      text-align: center;
+    }
+    .category-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .category-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .category-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #333;
+    }
+    .product-section {
+      margin-top: 30px;
+    }
+    .section-title {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .product-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .product-image {
+      height: 200px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+    }
+    .product-info {
+      padding: 15px;
+    }
+    .product-title {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    .product-desc {
+      font-size: 0.9rem;
+      color: #666;
+      margin: 5px 0;
+      line-height: 1.4;
+      max-height: 40px;
+      overflow: hidden;
+    }
+    .product-stock {
+      color: #10b981;
+      font-weight: 500;
+      margin: 5px 0;
+    }
+    .action-btn {
+      width: 100%;
+      padding: 10px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+    .action-btn:hover {
+      background: #5568d3;
+    }
+    .footer {
+      text-align: center;
+      padding: 30px 20px;
+      background: #333;
+      color: white;
+      margin-top: 30px;
+    }
+    .footer p {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>📦 StockHub Global</h1>
+    <p>Global Inventory Marketplace</p>
+  </header>
+
+  <div class="container">
+    <div class="category-section" id="categories">
+      <div class="category-item">
+        <div class="category-icon">💡</div>
+        <div class="category-name">Electronic Components</div>
+      </div>
+      <div class="category-item">
+        <div class="category-icon">🏭</div>
+        <div class="category-name">Industrial Equipment</div>
+      </div>
+      <div class="category-item">
+        <div class="category-icon">⚙️</div>
+        <div class="category-name">Machinery</div>
+      </div>
+      <div class="category-item">
+        <div class="category-icon">👕</div>
+        <div class="category-name">Apparel & Footwear</div>
+      </div>
+div class="category-item">
+        <div class="category-icon">🏠</div>
+        <div class="category-name">Home & Living</div>
+      </div>
+    </div>
+
+    <div class="product-section">
+      <h2 class="section-title">📦 Featured Products</h2>
+      <div class="product-grid" id="products">
+        <div class="product-card">
+          <div class="product-image">💡</div>
+          <div class="product-info">
+            <div class="product-title">Electronic Component Type A</div>
+            <div class="product-desc">High quality electronic components from certified Chinese suppliers</div>
+            <div class="product-stock">In Stock: 990 pcs</div>
+            <button class="action-btn" onclick="viewDetail(1)">View Details</button>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🏭</div>
+          <div class="product-info">
+            <div class="product-title">Industrial Equipment Model B</div>
+            <div class="product-desc">Professional industrial equipment with international quality certification</div>
+            <div class="product-stock">In Stock: 980 pcs</div>
+            <button class="action-btn" onclick="viewDetail(2)">View Details</button>
+          </div>
+        </div>
+        <div class="product-card">
+          <div="category-item">
+            <div class="category-icon">⚙️</div>
+            <div class="category-name">Machinery</div>
+          </div>
+<div class="product-item">
+          <div class="product-image">🏠</div>
+          <div class="product-info">
+            <div class="product-title">Home Appliances Model D</div>
+            <div class="product-desc">Quality home appliances with energy efficiency rating</div>
+            <div class="product-stock">In Stock: 960 pcs</div>
+            <button class="action-btn" onclick="viewDetail(4)">View Details</button>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">👕</div>
+          <div class="product-info">
+            <div class="product-title">Fashion Collection</div>
+            <div class="product-desc">Latest fashion trends from Chinese manufacturers</div>
+            <div class="product-stock">In Stock: 950 pcs</div>
+            <button class="action-btn" onclick="viewDetail(5)">View Details</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 StockHub. All rights reserved.</p>
+    <p>Version: v202604041030</p>
+  </footer>
+
+  <script>
+    // 加载品类数据
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(categories => {
+        const container = document.getElementById('categories');
+        container.innerHTML = categories.map(cat => `
+          <div class="category-item">
+            <div class="category-icon">${cat.icon || '📦'}</div>
+            <div class="category-name">${cat.nameEn || cat.name || 'Uncategorized'}</div>
+          </div>
+        `).join('');
+      })
+      .catch(err => console.error('加载品类失败:', err));
+
+    // 加载商品数据
+    fetch('/api/products?limit=10')
+      .then(res => res.json())
+      .then(products => {
+        const container = document.getElementById('products');
+        const productList = Array.isArray(products) ? products : (products.data || products);
+        container.innerHTML = productList.slice(0, 10).map(product => `
+          <div class="product-card">
+            <div class="product-image">${product.icon || '📦'}</div>
+            <div class="product-info">
+              <div class="product-title">${product.nameEn || product.name || 'Product'}</div>
+              <div class="product-desc">${product.descriptionEn || product.description || 'Quality product'}</div>
+              <div class="product-stock">In Stock: ${product.stock || product.stockQty || 0} pcs</div>
+              <button class="action-btn" onclick="viewDetail('${product.id}')">View Details</button>
+            </div>
+          </div>
+        `).join('');
+      })
+      .catch(err => console.error('加载商品失败:', err));
+
+    function viewDetail(id) {
+      alert('View details for product: ' + id);
+    }
+  </script>
+</body>
+</html>

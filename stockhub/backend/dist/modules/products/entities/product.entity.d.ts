@@ -1,0 +1,43 @@
+import { Category } from '../../categories/entities/category.entity';
+import { Merchant } from '../../merchants/entities/merchant.entity';
+export declare class Product {
+    id: string;
+    merchantId: string;
+    merchant: Merchant;
+    categoryId: number;
+    category: Category;
+    title: string;
+    description: string;
+    titleEn: string;
+    descriptionEn: string;
+    slug: string;
+    specifications: Record<string, any>;
+    images: string[];
+    videos: string[];
+    sku: string;
+    brand: string;
+    stockQty: number;
+    domesticPrice: number;
+    overseasPrice: number;
+    minOrderQty: number;
+    wholesaleTiers: Array<{
+        minQty: number;
+        unitPrice: number;
+        currency: string;
+        savings?: string;
+    }>;
+    displayDomestic: boolean;
+    displayOverseas: boolean;
+    isExpired: boolean;
+    expireDate: Date;
+    status: string;
+    seoTitle: string;
+    seoDescription: string;
+    seoKeywords: string;
+    viewCount: number;
+    inquiryCount: number;
+    soldCount: number;
+    createdAt: Date;
+    updatedAt: Date;
+    syncedAt: Date;
+}

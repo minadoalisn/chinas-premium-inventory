@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>库存易 - 国内库存求购平台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .header h1 {
+      font-size: 2.5rem;
+      margin: 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .header p {
+      font-size: 1.1rem;
+      margin: 10px 0 0;
+      opacity: 0.9;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .category-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 20px 0;
+      justify-content: center;
+    }
+    .category-item {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.3s;
+      flex: 1;
+      min-width: 150px;
+      text-align: center;
+    }
+    .category-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .category-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .category-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #333;
+    }
+    .product-section {
+      margin-top: 30px;
+    }
+    .section-title {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .product-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .product-image {
+      height: 150px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+    .product-info {
+      padding: 15px;
+    }
+    .product-title {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    .product-spec {
+      font-size: 0.9rem;
+      color: #666;
+      margin: 3px 0;
+    }
+    .product-stock {
+      color: #10b981;
+      font-weight: 500;
+      margin: 5px 0;
+    }
+    .action-btn {
+      width: 100%;
+      padding: 10px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+    .action-btn:hover {
+      background: #5568d3;
+    }
+    .footer {
+      text-align: center;
+      padding: 30px 20px;
+      background: #333;
+      color: white;
+      margin-top: 30px;
+    }
+    .footer p {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>📦 库存易</h1>
+    <p>国内领先的库存求购平台</p>
+  </header>
+
+  <div class="container">
+    <div class="category-section" id="categories">
+      <div class="category-item">
+        <div class="category-icon">💡</div>
+        <div class="category-name">电子元器件</div>
+      </div>
+      <div class="category-item">
+        <div class="category-icon">🏭</div>
+        <div class="category-name">工业设备</div>
+      </div>
+      <div class="category-item">
+        <div class="category-icon">⚙️</div>
+        <div class="category-name">机械设备</div>
+      </div>
+      <div class="category-item">
+        <div class="category-icon">👕</div>
+        <div class="category-name">服装鞋帽</div>
+      </div>
+      <div class="category-item">
+        <div class="category-icon">🏠</div>
+        <div class="category-name">家居用品</div>
+      </div>
+    </div>
+
+    <div class="product-section">
+      <h2 class="section-title">📋 采购需求列表</h2>
+      <div class="product-grid" id="products">
+        <div class="product-card">
+          <div class="product-image">📦</div>
+          <div class="product-info">
+            <div class="product-title">电子元件采购需求</div>
+            <div class="product-spec">规格：SMT贴片元件</div>
+            <div class="product-spec">颜色：-</div>
+            <div class="product-stock">库存需求：1000件</div>
+            <button class="action-btn" onclick="alert('请先登录')">📦 我有货源</button>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image">🏭</div>
+          <div class="product-info">
+            <div class="product-title">工业设备采购需求</div>
+            <div class="product-spec">规格：自动化设备</div>
+            <div class="product-spec">颜色：-</div>
+            <div class="product-stock">库存需求：500台</div>
+            <button class="action-btn" onclick="alert('请先登录')">📦 我有货源</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 库存易. 保留所有权利.</p>
+    <p>版本: v202604041030</p>
+  </footer>
+
+  <script>
+    // 加载品类数据
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(categories => {
+        const container = document.getElementById('categories');
+        container.innerHTML = categories.map(cat => `
+          <div class="category-item">
+            <div class="category-icon">${cat.icon || '📦'}</div>
+            <div class="category-name">${cat.name || cat.nameEn || '未分类'}</div>
+          </div>
+        `).join('');
+      })
+      .catch(err => console.error('加载品类失败:', err));
+  </script>
+</body>
+</html>

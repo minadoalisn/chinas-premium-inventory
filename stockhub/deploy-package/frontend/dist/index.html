@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>库存易 - 国内库存求购平台</title>
+    <meta name="description" content="国内领先的库存求购平台，帮您快速采购过剩商品、临期商品、库存清仓。真实库存，一键对接。">
+    <meta name="keywords" content="库存求购,过剩商品,临期商品,库存清仓,国内采购">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        #app {
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1976d2;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .nav-menu a:hover {
+            color: #1976d2;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .hero button {
+            background: white;
+            color: #1976d2;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .hero button:hover {
+            transform: scale(1.05);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            color: #1976d2;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card p {
+            color: #666;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .category-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .category-card h3 {
+            color: #1976d2;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            background: #333;
+            color: white;
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: #90caf9;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a {
+            color: #e3f2fd;
+            text-decoration: none;
+        }
+
+        .footer-section a:hover {
+            color: #90caf9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="header-content">
+                <a href="/" class="logo">📦 库存易</a>
+                <nav class="nav-menu">
+                    <a href="/">首页</a>
+                    <a href="#categories">分类</a>
+                    <a href="#about">关于</a>
+                </nav>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="hero">
+                <h1>专业的库存求购平台</h1>
+                <p>真实库存信息 · 一键智能匹配 · 快速对接交易</p>
+                <button @click="startTrading">开始求购</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>{{ stats.products.toLocaleString() }}</h3>
+                    <p>在售商品</p>
+                </div>
+                <div class="stat-card">
+                    <h3>{{ stats.demands.toLocaleString() }}</h3>
+                    <p>求购需求</p>
+                </div>
+                <div class="stat-card">
+                    <h3>{{ stats.matches.toLocaleString() }}</h3>
+                    <p>成功匹配</p>
+                </div>
+                <div class="stat-card">
+                    <h3>{{ stats.users.toLocaleString() }}</h3>
+                    <p>活跃用户</p>
+                </div>
+            </div>
+
+            <h2 class="section-title" id="categories">热门分类</h2>
+            <div v-if="loading" class="loading">加载中...</div>
+            <div v-else-if="error" class="error">加载失败: {{ error }}</div>
+            <div v-else class="categories">
+                <div class="category-card" v-for="category in categories" :key="category.id">
+                    <h3>{{ category.name }}</h3>
+                    <p>{{ category.name_en }}</p>
+                    <p>{{ category.description }}</p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>关于我们</h3>
+                    <p>库存易是国内领先的库存求购平台，帮助企业快速处理过剩库存，实现资源优化配置。</p>
+                </div>
+                <div class="footer-section">
+                    <h3>快速链接</h3>
+                    <ul>
+                        <li><a href="/">首页</a></li>
+                        <li><a href="#categories">分类</a></li>
+                        <li><a href="#about">关于</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>联系方式</h3>
+                    <p>邮箱: support@stockhub.com</p>
+                    <p>电话: 400-888-8888</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    loading: true,
+                    error: null,
+                    categories: [],
+                    stats: {
+                        products: 15234,
+                        demands: 8567,
+                        matches: 12453,
+                        users: 3421
+                    }
+                }
+            },
+            mounted() {
+                this.loadCategories();
+            },
+            methods: {
+                async loadCategories() {
+                    try {
+                        const response = await fetch('/api/categories');
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        this.categories = await response.json();
+                    } catch (e) {
+                        this.error = e.message;
+                        // 使用默认数据
+                        this.categories = [
+                            { id: 1, name: '电子元器件', name_en: 'Electronic Components', description: '各类电子元器件' },
+                            { id: 2, name: '集成电路', name_en: 'Integrated Circuits', description: 'IC芯片、处理器等' },
+                            { id: 3, name: '被动元件', name_en: 'Passive Components', description: '电阻、电容、电感等' },
+                            { id: 4, name: '连接器', name_en: 'Connectors', description: '各类连接器和插头' },
+                            { id: 5, name: '工业设备', name_en: 'Industrial Equipment', description: '工业生产设备' },
+                            { id: 6, name: '自动化设备', name_en: 'Automation Equipment', description: '自动化生产线设备' },
+                            { id: 7, name: '机械设备', name_en: 'Machinery Equipment', description: '各类机械加工设备' }
+                        ];
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                startTrading() {
+                    alert('请先登录或注册账号！');
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

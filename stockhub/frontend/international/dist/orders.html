@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - StockHub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    .header {
+      background: rgba(255,255,255,0.03);
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      background: linear-gradient(90deg, #e94560, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #e94560, #fbbf24);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+    .page-title {
+      font-size: 2rem;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #888;
+    }
+    .tab:hover { background: rgba(255,255,255,0.1); }
+    .tab.active {
+      background: linear-gradient(90deg, #e94560, #ff6b6b);
+      border-color: #e94560;
+      color: #fff;
+    }
+    .orders-list { display: flex; flex-direction: column; gap: 20px; }
+    .order-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 25px;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s;
+    }
+    .order-card:hover {
+      border-color: rgba(233,69,96,0.5);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .order-id { font-weight: bold; color: #e94560; }
+    .order-status {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .status-pending { background: rgba(251,191,36,0.2); color: #fbbf24; }
+    .status-processing { background: rgba(59,130,246,0.2); color: #60a5fa; }
+    .status-shipped { background: rgba(139,92,246,0.2); color: #a78bfa; }
+    .status-delivered { background: rgba(16,185,129,0.2); color: #10b981; }
+    .status-cancelled { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .order-items { margin-bottom: 20px; }
+    .order-item {
+      display: flex;
+      gap: 15px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .order-item:last-child { border-bottom: none; }
+    .item-icon {
+      width: 60px;
+      height: 60px;
+      background: #1a1a2e;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .item-info { flex: 1; }
+    .item-name { font-weight: 500; margin-bottom: 5px; }
+    .item-meta { color: #888; font-size: 0.85rem; }
+    .item-price { font-weight: bold; color: #e94560; }
+    .order-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .order-date { color: #888; font-size: 0.9rem; }
+    .order-total { font-size: 1.3rem; font-weight: bold; color: #fbbf24; }
+    .btn-track {
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-track:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: #e94560;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: #888;
+    }
+    .empty-state span { font-size: 4rem; margin-bottom: 20px; display: block; }
+    .empty-state h2 { margin-bottom: 10px; color: #fff; }
+    .login-prompt {
+      text-align: center;
+      padding: 60px 20px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 20px;
+      margin-top: 40px;
+    }
+    .login-prompt h2 { margin-bottom: 15px; }
+    .login-prompt p { color: #888; margin-bottom: 25px; }
+    .btn-login {
+      padding: 15px 40px;
+      background: linear-gradient(90deg, #e94560, #ff6b6b);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <a href="/" class="logo">StockHub</a>
+      <div class="user-menu">
+        <a href="/" style="color:#888;text-decoration:none;">← Back to Shop</a>
+        <div class="user-avatar" id="user-avatar">?</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1 class="page-title">📦 My Orders</h1>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="filterOrders('all')">All Orders</div>
+      <div class="tab" onclick="filterOrders('pending')">Pending</div>
+      <div class="tab" onclick="filterOrders('processing')">Processing</div>
+      <div class="tab" onclick="filterOrders('shipped')">Shipped</div>
+      <div class="tab" onclick="filterOrders('delivered')">Delivered</div>
+    </div>
+    
+    <div id="orders-container"></div>
+    
+    <div class="login-prompt" id="login-prompt" style="display:none;">
+      <h2>Please log in to view your orders</h2>
+      <p>Track your orders and manage your account</p>
+      <a href="/login.html" class="btn-login">Log In</a>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : '';
+    
+    let allOrders = [];
+    let currentFilter = 'all';
+
+    // 检查登录状态
+    function checkAuth() {
+      const token = localStorage.getItem('authToken');
+      const user = localStorage.getItem('user');
+      
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          document.getElementById('user-avatar').textContent = 
+            (userData.name || userData.email || 'U').charAt(0).toUpperCase();
+        } catch (e) {}
+      }
+      
+      return !!token;
+    }
+
+    // 加载订单
+    async function loadOrders() {
+      const isLoggedIn = checkAuth();
+      
+      if (!isLoggedIn) {
+        document.getElementById('login-prompt').style.display = 'block';
+        // 显示演示订单
+        renderOrders(getDemoOrders());
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('authToken');
+        const res = await fetch(`${API_BASE}/api/orders`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          allOrders = Array.isArray(data) ? data : (data.data || []);
+        }
+      } catch (err) {
+        console.log('Using demo orders');
+        allOrders = getDemoOrders();
+      }
+      
+      renderOrders(allOrders);
+    }
+
+    // 演示订单数据
+    function getDemoOrders() {
+      return [
+        {
+          id: 'ORD' + (Date.now() - 86400000),
+          status: 'processing',
+          date: new Date(Date.now() - 86400000).toISOString(),
+          total: 329.97,
+          items: [
+            { name: 'Electronic Components Kit', quantity: 2, price: 129.99, icon: '💡' },
+            { name: 'Premium Materials Pack', quantity: 1, price: 69.99, icon: '📦' }
+          ]
+        },
+        {
+          id: 'ORD' + (Date.now() - 259200000),
+          status: 'shipped',
+          date: new Date(Date.now() - 259200000).toISOString(),
+          total: 199.99,
+          items: [
+            { name: 'Industrial Supplies Set', quantity: 1, price: 199.99, icon: '🔧' }
+          ],
+          tracking: 'SF1234567890'
+        },
+        {
+          id: 'ORD' + (Date.now() - 604800000),
+          status: 'delivered',
+          date: new Date(Date.now() - 604800000).toISOString(),
+          total: 89.99,
+          items: [
+            { name: 'Office Essentials Bundle', quantity: 1, price: 89.99, icon: '📎' }
+          ]
+        }
+      ];
+    }
+
+    // 筛选订单
+    function filterOrders(status) {
+      currentFilter = status;
+      
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.textContent.toLowerCase().includes(status) || 
+            (status === 'all' && tab.textContent === 'All Orders')) {
+          tab.classList.add('active');
+        }
+      });
+      
+      const filtered = status === 'all' 
+        ? allOrders 
+        : allOrders.filter(o => o.status === status);
+      
+      renderOrders(filtered);
+    }
+
+    // 渲染订单
+    function renderOrders(orders) {
+      const container = document.getElementById('orders-container');
+      
+      if (!orders || orders.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <span>📦</span>
+            <h2>No orders found</h2>
+            <p>Start shopping to see your orders here</p>
+            <a href="/" class="btn-login" style="margin-top:20px;">Browse Products</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = orders.map(order => `
+        <div class="order-card">
+          <div class="order-header">
+            <div>
+              <span class="order-id">${order.id}</span>
+              <span class="order-date" style="margin-left:15px;">
+                ${new Date(order.date).toLocaleDateString('en-US', {
+                  year: 'numeric', month: 'long', day: 'numeric'
+                })}
+              </span>
+            </div>
+            <span class="order-status status-${order.status}">
+              ${getStatusText(order.status)}
+            </span>
+          </div>
+          
+          <div class="order-items">
+            ${(order.items || []).map(item => `
+              <div class="order-item">
+                <div class="item-icon">${item.icon || '📦'}</div>
+                <div class="item-info">
+                  <div class="item-name">${item.name}</div>
+                  <div class="item-meta">Qty: ${item.quantity}</div>
+                </div>
+                <div class="item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="order-footer">
+            <button class="btn-track" onclick="trackOrder('${order.id}')">
+              ${order.tracking ? '📍 Track Package' : '🔍 View Details'}
+            </button>
+            <span class="order-total">$${order.total.toFixed(2)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getStatusText(status) {
+      const texts = {
+        pending: '⏳ Pending',
+        processing: '⚙️ Processing',
+        shipped: '🚚 Shipped',
+        delivered: '✅ Delivered',
+        cancelled: '❌ Cancelled'
+      };
+      return texts[status] || status;
+    }
+
+    function trackOrder(orderId) {
+      alert(`Tracking for order ${orderId}\n\nTracking number will be available once your order ships.`);
+    }
+
+    // 初始化
+    loadOrders();
+  </script>
+</body>
+</html>

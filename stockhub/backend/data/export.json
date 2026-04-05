@@ -1,0 +1,107 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "phone": "13800138000",
+      "password": "$2b$10$zMVqI1LRoMdFlIQBj6ajcuVHoH/xeY.xHDVrn7U0ulz8bBhuxDB3a",
+      "role": "buyer",
+      "nickname": null,
+      "avatar": null,
+      "created_at": "2026-03-28 19:55:44",
+      "updated_at": "2026-03-28 19:55:44"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "电子元器件",
+      "name_en": "Electronic Components",
+      "slug": "electronic-components",
+      "description": "各类电子元器件",
+      "parent_id": null,
+      "level": 1,
+      "sort_order": 1,
+      "is_active": 1,
+      "created_at": "2026-03-28 19:49:32",
+      "updated_at": "2026-03-28 19:49:32"
+    },
+    {
+      "id": 2,
+      "name": "集成电路",
+      "name_en": "Integrated Circuits",
+      "slug": "integrated-circuits",
+      "description": "IC芯片、处理器等",
+      "parent_id": null,
+      "level": 2,
+      "sort_order": 1,
+      "is_active": 1,
+      "created_at": "2026-03-28 19:49:32",
+      "updated_at": "2026-03-28 19:49:32"
+    },
+    {
+      "id": 3,
+      "name": "被动元件",
+      "name_en": "Passive Components",
+      "slug": "passive-components",
+      "description": "电阻、电容、电感等",
+      "parent_id": null,
+      "level": 2,
+      "sort_order": 2,
+      "is_active": 1,
+      "created_at": "2026-03-28 19:49:32",
+      "updated_at": "2026-03-28 19:49:32"
+    },
+    {
+      "id": 4,
+      "name": "连接器",
+      "name_en": "Connectors",
+      "slug": "connectors",
+      "description": "各类连接器和插头",
+      "parent_id": null,
+      "level": 2,
+      "sort_order": 3,
+      "is_active": 1,
+      "created_at": "2026-03-28 19:49:32",
+      "updated_at": "2026-03-28 19:49:32"
+    },
+    {
+      "id": 5,
+      "name": "工业设备",
+      "name_en": "Industrial Equipment",
+      "slug": "industrial-equipment",
+      "description": "工业生产设备",
+      "parent_id": null,
+      "level": 1,
+      "sort_order": 2,
+      "is_active": 1,
+      "created_at": "2026-03-28 19:49:32",
+      "updated_at": "2026-03-28 19:49:32"
+    },
+    {
+      "id": 6,
+      "name": "自动化设备",
+      "name_en": "Automation Equipment",
+      "slug": "automation-equipment",
+      "description": "自动化生产线设备",
+      "parent_id": null,
+      "level": 2,
+      "sort_order": 1,
+      "is_active": 1,
+      "created_at": "2026-03-28 19:49:32",
+      "updated_at": "2026-03-28 19:49:32"
+    },
+    {
+      "id": 7,
+      "name": "机械设备",
+      "name_en": "Machinery Equipment",
+      "slug": "machinery-equipment",
+      "description": "各类机械加工设备",
+      "parent_id": null,
+      "level": 2,
+      "sort_order": 2,
+      "is_active": 1,
+      "created_at": "2026-03-28 19:49:32",
+      "updated_at": "2026-03-28 19:49:32"
+    }
+  ]
+}

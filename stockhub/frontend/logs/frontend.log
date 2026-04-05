@@ -1,0 +1,18 @@
+
+> stockhub-domestic@1.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 276 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://10.29.238.60:5173/
+4:22:24 AM [vite] Pre-transform error: parsing /workspace/projects/stockhub/frontend/domestic/tsconfig.node.json failed: Error: ENOENT: no such file or directory, open '/workspace/projects/stockhub/frontend/domestic/tsconfig.node.json'
+10:04:55 AM [vite] changed tsconfig file detected: /workspace/projects/stockhub/frontend/domestic/tsconfig.node.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+6:30:14 AM [vite] Pre-transform error: Failed to resolve import "remixicon/fonts/remixicon.css" from "src/main.ts". Does the file exist?
+6:30:14 AM [vite] Pre-transform error: Transform failed with 1 error:
+/workspace/projects/stockhub/frontend/domestic/src/stores/auth.ts:1:8: ERROR: Expected ">" but found "setup"
+6:30:15 AM [vite] ✨ new dependencies optimized: vue, pinia, element-plus, vue-router
+4:19:03 AM [vite] page reload index.html
+4:19:37 AM [vite] vite.config.ts changed, restarting server...
+4:19:37 AM [vite] server restarted.

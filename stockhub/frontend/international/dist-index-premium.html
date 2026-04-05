@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockHub - Premium Global Marketplace</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#0a0a1a;color:#fff}
+.header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:25px;text-align:center;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 20% 50%,rgba(233,69,96,0.3) 0%,transparent 50%),radial-gradient(circle at 80% 50%,rgba(67,56,202,0.3) 0%,transparent 50%);pointer-events:none}
+.header h1{margin:0 0 10px;font-size:42px;font-weight:800;background:linear-gradient(135deg,#e94560,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative;z-index:1;text-shadow:0 0 30px rgba(233,69,96,0.5)}
+.header p{margin:0;opacity:.9;font-size:18px;position:relative;z-index:1}
+.search{max-width:700px;margin:30px auto;display:flex;position:relative;z-index:1}
+.search input{flex:1;padding:18px 25px;border:none;border-radius:50px 0 0 50px;font-size:18px;background:rgba(255,255,255,0.95);color:#333}
+.search button{background:linear-gradient(135deg,#e94560,#ff6b6b);color:#fff;border:none;padding:18px 45px;border-radius:0 50px 50px 0;cursor:pointer;font-size:18px;font-weight:bold;transition:all .3s}
+.search button:hover{background:linear-gradient(135deg,#ff6b6b,#e94560);transform:scale(1.02)}
+.banner{background:linear-gradient(135deg,#e94560,#fbbf24);padding:30px;text-align:center;margin:20px;border-radius:20px;max-width:1400px;margin:20px auto}
+.banner h2{font-size:28px;margin-bottom:10px}
+.banner p{opacity:.9}
+.products{padding:40px;max-width:1400px;margin:0 auto}
+.products h2{text-align:center;color:#fff;margin-bottom:35px;font-size:28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:30px}
+.card{background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);transition:all .4s;cursor:pointer;position:relative}
+.card:hover{transform:translateY(-15px);box-shadow:0 30px 60px rgba(233,69,96,0.3);border-color:rgba(233,69,96,0.5)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#e94560,#fbbf24);opacity:0;transition:opacity .3s}
+.card:hover::before{opacity:1}
+.badge{position:absolute;top:15px;right:15px;background:#e94560;color:#fff;padding:5px 15px;border-radius:20px;font-size:12px;font-weight:bold;z-index:2}
+.img{height:200px;background:linear-gradient(135deg,#1e3a5f,#0f3460);display:flex;align-items:center;justify-content:center;font-size:70px;color:#e94560;position:relative}
+.discount-tag{position:absolute;bottom:10px;left:10px;background:#e94560;color:#fff;padding:5px 12px;border-radius:15px;font-size:12px;font-weight:bold}
+.info{padding:25px}
+.name{font-size:18px;font-weight:bold;color:#fff;margin-bottom:8px;line-height:1.4}
+.cat{color:#a78bfa;font-size:14px;margin-bottom:15px}
+.prices{display:flex;align-items:center;gap:15px;margin-bottom:10px}
+.original-price{color:#6b7280;font-size:16px;text-decoration:line-through}
+.current-price{color:#e94560;font-size:32px;font-weight:800}
+.currency{font-size:16px}
+.save-badge{background:#fbbf24;color:#1a1a2e;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:bold}
+.stock{color:#9ca3af;font-size:14px;margin-bottom:15px}
+.stock span{color:#4ade80;font-weight:bold}
+.btn{width:100%;padding:15px;background:linear-gradient(135deg,#e94560,#ff6b6b);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;transition:all .3s}
+.btn:hover{background:linear-gradient(135deg,#ff6b6b,#e94560);transform:scale(1.02)}
+.footer{background:#0a0a1a;border-top:1px solid rgba(255,255,255,0.1);padding:40px;text-align:center;margin-top:60px}
+.footer p{color:#6b7280;font-size:14px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>STOCKHUB</h1>
+  <p>Premium Inventory Marketplace | Direct from China Factory | Worldwide Shipping</p>
+  <div class="search">
+    <input type="text" id="searchInput" placeholder="Search products..." onkeypress="if(event.key==='Enter')doSearch()">
+    <button onclick="doSearch()">Search</button>
+  </div>
+</div>
+<div class="banner">
+  <h2>LIMITED TIME OFFER - Up to 50% OFF</h2>
+  <p>Premium products at unbeatable prices | Direct factory sourcing</p>
+</div>
+<div class="products">
+  <h2>BEST SELLERS - FLASH DEALS</h2>
+  <div class="grid" id="products">Loading...</div>
+</div>
+<div class="footer">
+  <p>2026 StockHub | Premium Global Inventory Solutions</p>
+  <p>Secure Payment | Worldwide Shipping | 24/7 Support</p>
+</div>
+<script>
+var all=[];
+async function init(){
+  try{
+    var r=await fetch('/api/products');
+    var d=await r.json();
+    all=Array.isArray(d)?d:(d.data||[]);
+    render(all);
+  }catch(e){document.getElementById('products').innerHTML='<p style="text-align:center;padding:50px;color:#fff">Failed to load</p>';}
+}
+function render(ps){
+  var c=document.getElementById('products');
+  if(!ps||!ps.length){c.innerHTML='<p>No products</p>';return;}
+  c.innerHTML=ps.slice(0,24).map(function(p){
+    var name=p.nameEn||p.name||'Premium Product';
+    var cat=p.categoryNameEn||p.categoryName||'Category';
+    var price=p.price||0;
+    var originalPrice=Math.round(price*1.5);
+    var stock=p.stock||0;
+    var discount=originalPrice>price?Math.round((1-price/originalPrice)*100):0;
+    return '<div class="card" onclick="view('+p.id+')">'+
+      '<div class="badge">HOT DEAL</div>'+
+      '<div class="img">PACK</div>'+
+      '<div class="info">'+
+        '<div class="name">'+name+'</div>'+
+        '<div class="cat">'+cat+'</div>'+
+        '<div class="prices">'+
+          '<span class="original-price">$'+originalPrice+'</span>'+
+          '<span class="current-price">$'+price+'</span>'+
+          (discount>0?'<span class="save-badge">SAVE '+discount+'%</span>':'')+
+        '</div>'+
+        '<div class="stock">Stock: <span>'+stock+'</span> units available</div>'+
+        '<button class="btn" onclick="event.stopPropagation();order('+p.id+')">Order Now</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function view(id){location.href='/product.html?id='+id;}
+function order(id){alert('Order function coming soon!');}
+function doSearch(){
+  var kw=document.getElementById('searchInput').value.toLowerCase();
+  render(all.filter(function(p){return (p.name||'').toLowerCase().includes(kw)||(p.nameEn||'').toLowerCase().includes(kw);}));
+}
+init();
+</script>
+</body>
+</html>
